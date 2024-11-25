@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Fuerza bruta.md",
+                "file": "README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Fuerza bruta"
+              "title": "README"
             }
           }
         ]
@@ -164,11 +164,11 @@
   },
   "active": "e4dbaceeade87015",
   "lastOpenFiles": [
-    "Chuleta HTB.md",
+    "Credenciales en linux.md",
+    "README.md",
+    "Transferencia de archivos.md",
     "Fuerza bruta.md",
     "2024-11-25.md",
-    "Transferencia de archivos.md",
-    "Credenciales en linux.md",
     "Credenciales en Windows.md",
     "Untitled.canvas",
     "Pasted image 20241119102616.png",
