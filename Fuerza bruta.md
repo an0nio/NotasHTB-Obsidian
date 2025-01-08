@@ -88,15 +88,16 @@ nxc <proto> -h # p. ej nxc smb -h
 ```
 #### Ejemplo smb
 ```bash
+# Importante revisar dominio con -d ó poner --local-auth
 nxc smb $target -u user.list -p passwords.list
 #imaginamos que hemos obtenido un user y pass válido: 
 nxc smb $target -u "user" -p "password" --shares
 #Una vez conocido el directorio
-smblcient -U user \\\\$target\\SHARENAME
+smbclient -U user \\\\$target\\SHARENAME
 ```
 
 ### hydra
-Uso básico de la herramienta
+Uso básico de la herramienta. Puede ser más lenta que alguna de las herrmaientas posteriores, pero es más completa
 ```bash
 hydra -L <user_list> -P <password_list> <protocol>://<target>
 ```
@@ -105,6 +106,23 @@ podemos utilizar `-l` ó `-p` para único usuario/password en vez de lista
 hydra -C <user_pass.list> <protocol>://<target>
 ```
 Donde `<user_pass.list>` es una  combinación de usuario y contraseña separados por `:`
+### Medusa
+Permite multitarget
+```bash
+medusa -h $target -u <username> -P <password_list> -M <servicio>
+```
+En vez de `-u` para un único usuario podríamos utilizar `-U` para una lista. Mismo con `-p`.
+### Crowbar
+Es útil para servciios como RDP, SSH (claves), VNC, OpenVPN. Permite hacer fuerza bruta de claves privadas en SSH también
+```bash
+crowbar -b <protocolo> -s <objetivo> -U <archivo_usuarios> -C <archivo_contraseñas>
+```
+### Ncrack
+Soporta opciones avanzadas más técnicas y está optimizada para ataques de red y autenticación. Soporta algún servicio más que medusa, como RDP, VNC, PostgreSQL.
+```bash
+ncrack -p <PORT_NUMBER> -U users.txt -P passwords.txt <target_IP>
+```
+
 ### Metasploit
 #### Enumeración SMB
 ```bash

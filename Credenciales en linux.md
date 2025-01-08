@@ -115,7 +115,7 @@ for l in $(echo ".conf .config .cnf");do echo -e "\nFile extension: " $l; find /
 
 #### Credenciales en archivos de configuración
 ```bash
-for i in $(find / -name *.cnf 2>/dev/null | grep -v "doc\|lib");do echo -e "\nFile: " $i; grep "user\|password\|pass" $i 2>/dev/null | grep -v "\#";done
+for i in $(find / -name *.cnf 2>/dev/null | grep -v "doc\|lib");do echo -e "\nFile: " $i; grep "user\|password\|pass\cred" $i 2>/dev/null | grep -v "\#";done
 ```
 ### Archivos con otras extensiones
 ```bash

