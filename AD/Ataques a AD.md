@@ -6,5 +6,9 @@
 - [[Living off the land]]
 - [[Kerberoasting]]
 - [[Abuso ACL]]
+- [[Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL]]
+- [[Vulnerabilidades de vanguardia]]
+- [[Miscelaneo]]
+- [[Domain Trust]]
 
 

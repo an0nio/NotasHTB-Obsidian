@@ -1,3 +1,4 @@
+#nxc #sharphound #boodhound
 ## Sobre MS-RPC y LDAP
  **LDAP y MS-RPC** en conjunto nos una **visión completa del entorno objetivo**. LDAP proporciona una visión **centralizada y amplia** del dominio, mientras que MS-RPC ofrece **detalles más granulares** sobre recursos compartidos, cuentas locales y configuraciones del sistema.  
 Combinar ambos enfoques permite descubrir configuraciones inseguras y obtener información crítica.
