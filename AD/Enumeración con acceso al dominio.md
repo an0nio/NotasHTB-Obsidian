@@ -123,11 +123,11 @@ Para poder ejecutar los siguientes comandos hacen falta permisos de adminstrador
 ## Windows
 ### Módulo `ActiveDirectory`
 - Cargar el módulo y comprobar que está cargado
-```powershell
+	```powershell
 	Import-Module ActiveDirectory 
 	# podemos comprobar que está cargado ejecutando lo siguiente: 
 	Get-Module
-```
+	```
 - Obtener información del dominio - `Get-ADDomain`
 	```powershell
 	Get-ADDomain
@@ -135,6 +135,10 @@ Para poder ejecutar los siguientes comandos hacen falta permisos de adminstrador
 - Obtener usuarios con SPN configurado (kerberoasting) - `Get-ADUser`
 	```powershell
 	Get-ADUser -Filter {ServicePrincipalName -ne "$null"} -Properties ServicePrincipalName
+	```
+-  Mostrar cuentas sin contraseña requerida
+	```powershell
+	Get-ADUser -Filter 'userAccountControl -band 128' -Properties userAccountControl
 	```
 - Mostrar relaciones de confianza - `Get-ADTrust`
 	```powershell
@@ -168,6 +172,11 @@ Hay más información sobre algunos comandos de PowerView [[PowerView| aquí]]. 
 	```powershell
 	Get-DomainUser -SPN -Properties samaccountname,ServicePrincipalName
 	```
+- Mostrar cuentas con contraseñas en texto claro permitido
+	```powershell
+	Get-DomainUser -Identity * | ? {$_.useraccountcontrol -like '*ENCRYPTED_TEXT_PWD_ALLOWED*'} | select samaccountname,useraccountcontrol
+	```
+	Para explotar esto, una
 ### Sharpview
 Es la versión .NET d `powerView`. Puede ser útil cuando hay medidas de hardening sobre un entorno powershell
 ### Snaffler
