@@ -73,6 +73,7 @@ nxc smb $target --shares -u '' -p ''
 ##### smbclient
 ```bash
 smbclient -N -L //$target
+smbclient -U=<username> -L //$target
 ```
 ##### smbmap
 ```bash

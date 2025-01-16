@@ -3,7 +3,7 @@
 
 | Base de Datos | Puertos Comunes                    |
 | - | - |
-| MSSQL         | TCP/1433, UDP/1434 (2433 "oculto") |
+| ssh -MSSQL    | TCP/1433, UDP/1434 (2433 "oculto") |
 | MySQL         | TCP/3306                           |
 ## Enumeración Inicial 
 ### MSSQL
@@ -178,9 +178,9 @@ Tanto para escritura como para lectura, la variable `secure_file_priv` nos indic
 - **Sin contenido**: Podemos leer escribir en cualquier directorio
 - **Con directorio como contenido**: Sólamente podemos importar/exportar archivos a ese directorio
 - **Valor `null`**: El servidor deshabilita la subida/bajada de archivos
-```sql
-show variables like "secure_file_priv";
-```
+	```sql
+	show variables like "secure_file_priv";
+	```
 #### Escritura
 Escribir un archivo PHP (ejemplo para un shell web):
 

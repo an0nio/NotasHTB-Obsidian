@@ -44,17 +44,25 @@
 
 - **`enum4linux` (SMB - 445, 139):**
 	```bash
+	# Sin credenciales
 	enum4linux -U $target | grep "user:" | cut -f2 -d"[" | cut -f1 -d"]"
+	# Con credenciales
+	enum4linux -U -u <user> -p <pass> $target | grep "user:" | cut -f2 -d"[" | cut -f1 -d"]"
 	```
 
 - **`rpcclient`:**
 	```bash
+	# sin credenciales
 	rpcclient -U "" -N 172.16.5.5
+	# Con credenciales
+	rpcclient -U "username" 172.16.5.5
+	# Una vez en sesión
+	rpcclient $> enumdomusers
 	```
 
 - **`nxc` SMB ( `--users`):**
 	```bash
-	nxc smb $target --users
+	nxc smb $target -u <username> -p <password> --users
 	```
 	La flag `--users` nos indica el número de intentos fallidos y fecha de último intento fallido
 - **`ldapsearch` ( Anonymous Bind):**
@@ -104,6 +112,7 @@
 	```powershell
 	net accounts
 	```
+	Si  obtenemos el siguiente valor `Lockout threshold: Never` significa que podemos ejecutar fuerza bruta sin problema. 
 
 - **Powerview:**
 	```powershell

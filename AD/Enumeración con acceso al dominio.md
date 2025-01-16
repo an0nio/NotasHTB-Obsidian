@@ -160,7 +160,7 @@ Hay más información sobre algunos comandos de PowerView [[PowerView| aquí]]. 
 - Enumeración de usuarios - `Get-DomainUser`
 	```powershell
 	Get-DomainUser -Identity mmorgan -Domain inlanefreight.local | Select-Object -Property name,samaccountname,description,memberof,whencreated,pwdlastset,lastlogontimestamp,accountexpires,admincount,userprincipalname,serviceprincipalname,useraccountcontrol
-```
+	```
 - Membresía recursiva de grupos - `Get-DomainGroupMember`
 	```powershell
 	Get-DomainGroupMember -Identity "Domain Admins" -Recurse
@@ -189,5 +189,5 @@ Snaffler.exe -s -d inlanefreight.local -o snaffler.log -v data
 Similar a `bloodhound-python`, aunque permite obtener información de sesiones, ACLs, grupos locales y rutas de confianza, ya además de actúar sobre el protocolo LDAP, también actúa sobre kerberos, WinRM y SMB
 ```powershell
 .\SharpHound.exe -c All --zipfilename ILFREIGHT
-.\SharpHound.exe -c all, Group --zipfilename capturaNombreGrupo
+.\SharpHound.exe -c all, Group --zipfilename sharphound_inlane
 ```

