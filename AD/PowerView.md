@@ -28,8 +28,8 @@ Import-Module .\PowerView.ps1
 | `Get-DomainDFSShare`        | Devuelve una lista de sistemas de archivos distribuidos (DFS) del dominio actual o especificado.   |
 ## **Funciones de Políticas de Grupo (GPO):**
 
-| **Comando**          | **Descripción**                                                               |
-| -------------------- | ----------------------------------------------------------------------------- |
+| **Comando**        | **Descripción**                                                               |
+| ------------------ | ----------------------------------------------------------------------------- |
 | `Get-DomainGPO`    | Devuelve todas las GPOs o una GPO específica en AD.                           |
 | `Get-DomainPolicy` | Devuelve la política predeterminada del dominio o del controlador de dominio. |
 

