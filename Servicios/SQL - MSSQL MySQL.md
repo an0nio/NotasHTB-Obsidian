@@ -57,7 +57,7 @@ Se puede añadir la flag `-h` para proporcionar una salida más limpia, sin enca
 ### MSSQL - Linux `Impacket mssqlclient`
 
 ```bash
-mssqlclient.py usuario@$target -p 1433
+impacket-mssqlclient usuario@$target -p 1433
 ```
 #### Como usuario de AD
 Si nos autenticamos con un usuario Windows, podemos hacerlo con la flag `-windows-auth`
@@ -125,7 +125,7 @@ EXECUTE sp_configure 'xp_cmdshell', 1;
 GO
 RECONFIGURE;
 GO
-xp_cmdshell 'whoami';
+EXECUTE xp_cmdshell 'whoami';
 GO
 ```
 

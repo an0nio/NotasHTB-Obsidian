@@ -17,7 +17,10 @@
 	# si no funciona
 	dos2unix -f infoMimikatz
 	```
-
+- Convertir a teclado en español
+	```powershell
+	Set-WinUserLanguageList -LanguageList es-ES -Force
+	```
 
 ## Con acceso de administrador a un sistema Windows
 ### Crear un usuario persistente con permisos de administrador

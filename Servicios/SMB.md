@@ -8,22 +8,27 @@ Presionamos la combinación de teclas y ponemos la dirección del recurso compar
  \\192.168.220.129\Finance\
 ```
 #### CMD 
+##### Net View - Mostrar contenido 
+```powershell
+net view \\dc01 /all
+```
 ##### DIR - Mostrar contenido
 ```powershell
-dir \\192.168.220.129\Finance\
+dir \\192.168.220.129\share\
 ```
 ##### Net Use - Mapear recurso compartido `
 ```powershell
 # Sin credenciales
-net use n: \\192.168.220.129\Finance
+net use n: \\192.168.220.129\share
 # Con credenciales
-net use n: \\192.168.220.129\Finance /user:plaintext Password123
+net use n: \\192.168.220.129\share /user:test test
 # Una vez mapeado: 
 cd n: 
 dir
 # Desconectar el mapeo
 net use n: /delete
 ```
+
 #### Powershell
 ##### Mostrar contenido
 ```powershell
@@ -89,6 +94,16 @@ smbclient -U user \\\\$target\\SHARENAME
 # Sin credenciales - smbclient es compatible con sintaxis Windows y Linux
 smbclient //$target/SHARENAME -N
 ```
+###### Subir contenido
+```bash
+smb: \> put <archivo_local>
+# o varios archivos
+smb: \> mput *.txt
+```
+###### Descargar contenido
+```bash
+smb: \> get <archivo_remoto>
+```
 ###### Descargar todo el contenido de una carpeta 
 ```
 smb: \> mask ""
@@ -118,6 +133,10 @@ Combinación de varios scripts para obtener más información
 ```bash
 nmap -p 445 --script smb-vuln-*,smb-enum-*,smb-os-discovery $target
 ```
+Podemos mostrar algunos de los scripts de smb del siguiente modo: 
+```bash
+ls -1 /usr/share/nmap/scripts/smb*
+```
 ### Recursos compartidos
 [[SMB#Enumerar recursos compartidos]]
 ### Enumerar usuarios y grupos
@@ -141,6 +160,13 @@ netshareenum
 Ejemplo en el que intentamos enumerar usaurios en una red
 ```bash
 crackmapexec smb 10.10.110.0/24 -u administrator -p 'Password123!' --loggedon-users
+```
+#### Ejemplo descubrimiento de información en varios hosts
+A partir de nmap buscamos todos los hosts que tengan el puerto 445 abierto en una subred y ejecutamos `enum4linux` sobre todos esos hosts
+```bash
+sudo nmap $target/24 -p445 -n -vvv -oN smbSErvice2.txt
+cat smbSErvice.txt | grep open -B5 | grep report | awk '{print $5}' > hosts_SMB
+cat hosts_SMB | while read host; do echo "Enumerando $host..."; enum4linux $host -A -C >> "enum4linux_192.168.173.0"; done
 ```
 ## Montar servidor SMB
 [[Transferencia de archivos#Impacket-smbserver - Sin user-pass| Más info a paritr de aquí]]
@@ -196,7 +222,7 @@ Los hash capturados se guardan en
 /usr/share/responder/logs/Responder-Session.log
 ```
 #### NTML Relay - impacket-ntmlrelay
-Actúa como servidor falso en servicios como SMB ó HTTP y redirige las autenticaciones interceptadas en tiempo real. En el siguiente ejemplo solo captura los hashes
+Actúa como servidor falso en servicios como SMB ó HTTP y redirige las autenticaciones interceptadas en tiempo real. En el siguiente ejemplo solo captura los hashes (`-t` es la máquina que recibirá la autenticación robada)
 ```bash
 impacket-ntlmrelayx --no-http-server -smb2support -t $target
 ```

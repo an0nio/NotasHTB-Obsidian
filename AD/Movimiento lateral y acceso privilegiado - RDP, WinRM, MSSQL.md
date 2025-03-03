@@ -123,9 +123,21 @@ Enter-PSSession -ComputerName DEV01 -Credential INLANEFREIGHT\\backupadm -Config
 
 ## Obtener PS como otro usuario - Windows
 ### Runas
-```powershell
-tpetty
-```
+Runas no funciona sin una GUI (no funcionaría en una revshell ó WinRM)
+- Ejecución de runas como `OTRO_USUARIO`
+	```powershell
+	runas /user:OTRO_USUARIO powershell
+	```
+	`runas` **NO eleva permisos automáticamente**, solo cambia de usuario.Para obtener permisos completos, debes **elevar la sesión con `-Verb runAs`**. Deberíamos escribir lo siguiente para obtener permisos completos (si los tiene `OTRO_USUARIO`)
+	```powershell
+	Start-Process powershell -Verb runAs
+	```
+	lo que nos dará acceso completo 
+- Ejecucin de runas directamente con permisos elevados
+	```powershell
+	runas /user:OTRO_USUARIO "cmd /c start powershell -Verb runAs"
+	```
+
 ### psexec
 - Ejecutar ps como otro usuario
 	```powershell

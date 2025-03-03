@@ -70,6 +70,13 @@ Además de hacer fuerza bruta a subdominios, encuentra todos los registros de un
 ```bash
 dnsenum --dnsserver $target --enum -p 0 -s 0 -o subdomains.txt -f /usr/share/wordlists/seclists/Discovery/DNS/namelist.txt dev.inlanefreight.htb
 ```
+#### DNSRecon
+Similar a DNSEnum, pero más completo
+```bash
+dnsrecon -d megacorpone.com -t std -n $target
+# Fuerza bruta con diccionario
+dnsrecon -d megacorpone.com -D ~/list.txt -t brt
+```
 #### Búsqueda de dominios - estado de la consulta
 A veces,  un servidor DNS servidor está rechazando intencionalmente una consulta devolviendo como status: `REFUSED`. La siguiente consulta nos devolvería el estado 
 ```bash

@@ -78,6 +78,7 @@
 - **`Kerbrute`:**
 	```bash
 	kerbrute userenum -d inlanefreight.local --dc $target /opt/jsmith.txt
+	# otra lista interesante: /usr/share/wordlists/dirb/others/names.txt
 	```
 
 ### Ejecutar Password Spraying

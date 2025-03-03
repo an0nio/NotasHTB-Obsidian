@@ -1,5 +1,6 @@
 #pivoting #tunneling #port-forwarding #lateral-movement
 ## Port forwarding
+NOTA: Si hemos accedido a través de una `revshell` simple a la máquina sobre la que pilotamos, deberemos actualizar a una tty para poder introducir la contraseña de ssh por prompt
 ### SSH - Linux
 #### Local port forwarding
 ##### Para parecer que el tráfico proviene de localhost 
@@ -18,7 +19,10 @@ Y desde la perspectiva de `$target` el tráfico parece provenir de `localhost`
 ##### Para conectar con `$target` a través de `$pivot`
 Si no tenemos acceso a `$target` desde nuestra pwnbox, pero sí desde `$pivot`, podemos hacer lo siguiente (supongamos que queremos conectarnos vía RDP  a `$target`)
 ```bash
+# Escucha solo en localhost. Solo la máquina que ejecuta el comando puede acceder al puerto 33389
 ssh -NfL 33389:$target:3389 user_on_pivot@$pivot
+# Escucha en todas las interfaces. Cualquier máquina puede acceder a 33389
+ssh -NfL 0.0.0.0:33389:$target:3389 user_on_pivot@$pivot
 ```
 Seguido de: 
 ```bash
@@ -26,8 +30,19 @@ xfreerdp /v:localhost /u:username_on_target /p:password_on_target /port:33389
 ```
 - El tráfico enviado al puerto **`33389`** en tu máquina local será redirigido al puerto **`3389`** en **`$target`** a través de **`$pivot`**.
 - Desde la perspectiva de **`$target`**, el tráfico parece provenir de **`$pivot`**, cumpliendo cualquier restricción que limite las conexiones RDP al origen `$pivot`.
-#### Reverse port forwarding
-Puede ser útil en escenarios como en el que necesitamos que la máquina víctima se comunique con nosotros , pero no tiene una ruta hacia nosotros 
+#### Dynamic Port Forwarding
+Crea un túnel SOCKS (proxy) en el puerto especificado. Cuando se ejecute una herramienta sobre proxychains, para `$target` será como si la conexión fuera de `$pivot`
+```bash
+# Si lo hacemos desde nuestra pwnbox. Solo nuestra máquina puede conectarse al puerto 9050
+ssh -NfD 9050 ubuntu@$pivot
+# El siguiente comando permite que cualquier máquina se conecte al puerto 9050. Si lo hacemos desde una máquina pivote
+ssh -NfD 0.0.0.0:9050 ubuntu@$pivot
+# IMPORTANTE. Después de esto la última línea de /etc/proxychains4.conf debe ser algo similar a esta (la ip es de la máquina que ha ejecutado ssh -NfD ...): 
+socks5 192.168.214.63 9050
+```
+#### Remote port forwarding
+##### Máquina víctima se comunica con nosotros
+Puede ser útil en escenarios como en el que necesitamos que la máquina víctima se comunique con nosotros , pero no tiene una ruta hacia nosotros
 ```bash
  ssh -R 8080:localhost:8000 username@$pivot -vN
 ```
@@ -52,14 +67,58 @@ nc -nvlp 8000
 	```bash
 	sudo systemctl restart ssh
 	```
-#### Dynamic Port Forwarding
-Crea un túnel SOCKS (proxy) en el puerto especificado. Cuando se ejecute una herramienta sobre proxychains, para `$target` será como si la conexión fuera de `$pivot`
-```bash
-ssh -D 9050 ubuntu@$pivot
-# Sin ejecutar comandos (-N) y en background (-f) 
-ssh -NfD 9050 ubuntu@$pivot
-```
-### Windows - `plink`
+##### Solo se permite tráfico saliente en la red atacada
+Si la red a la que queremos acceder tiene un cortafuegos que no permite tráfico entrante, pero sí saliente. Supongamos que desde nuestra máquina `$pivot` queremos acceder al puerto 5432 de `$target`
+- En este caso el puerto de escucha del reenvío de puertos está vinculado al servidor ssh (en dynamic y local está vinculado al cliente). Nuestra pwnbox debe tener activado el servicio ssh
+	```bash
+	sudo systemctl start ssh
+	```
+- En la máquina pivote debemos escribir lo siguiente
+	```bash
+	ssh -N -R 127.0.0.1:2345:10.4.153.215:5432 an0nio@192.168.45.216
+	```
+	Aquí nuestra pwnbox escucha en el puerto 2345 y redirige el tráfico a $target:5432
+- Podríamos acceder al servicio en el puerto 5432 de $target del siguiente modo: 
+	```bash
+	psql -h 127.0.0.1 -p 2345 -U postgres
+	```
+#### Remote dynamic Port Forwarding
+Crea un reenvío de puertos dinámico en la configuración remota. El puerto proxy SOCS está vinculado al servidor ssh y el tráfico se reenvía desde el cliente ssh. 
+- Debemos tener activado el servicio ssh en nuestra pwnbox
+	```bash
+	service ssh start
+	```
+- Desde la máquina pivote escribimos lo siguiente: 
+	```
+	ssh -N -R 9998 an0nio@192.168.45.216
+	```
+- En la configuración de `/etc/proxychains4.conf` debe haber lo siguiente:
+	```bash
+	socks5 127.0.0.1 9998
+	```
+		
+
+### Windows
+#### Solo cliente ssh
+- Si no tenemos un servidor ssh, pero sí un cliente ssh, podemos utilizar de forma natural remote dynamic port forwarding 
+- Comprobamos que tenemos ssh -> Desde CMD (no funciona en powershsell)
+	```powershell
+	where ssh
+	```
+- En nuestra pwnbox activamos el servidor ssh 
+	```bash
+	service ssh start
+	```
+- En la máquina comprometida escribimos
+	```powershell
+	ssh -N -R 9998 an0nio@192.168.45.216
+	```
+- Nos aseguramos que tenemos la siguiente información en `/etc/proxychains4.conf`
+	```bash
+	socks5 127.0.0.1 9998
+	```
+- Y tenemos un túnel socks creado con el que podemos utilizar proxychains con normalidad
+#### `plink`
 Algunas versiones de Windows no tienen cliente SSH instalado de forma nativa, por lo que hay que utilizar alguna otra herrramienta, como puede ser `plink`
 - Local port forwarding
 ```bash
@@ -174,6 +233,16 @@ Opción algo más rápida y en principio fiable:
 ```bash
 proxychains nmap -v -Pn -sT --max-rate 1000 --min-parallelism 10 -p 1-1000 $target
 ```
+##### LInux
+- Con `/dev/tcp` y `timeout` (fuerza a que no se quede colgado en cada intento de conexión)
+	```bash
+	for port in {1..65535}; do timeout 1 bash -c "echo >/dev/tcp/$target/$port" 2>/dev/null && echo "Puerto $port abierto"; done
+	```
+- Con `nc`
+	```bash
+	for port in {1..65535}; do nc -nvv -w 1 -z $target $port 2>&1 | grep succeeded; done
+	```
+
 #####  powershell
 Podemos encontrar listas con los puertos más comunes [aquí](https://gist.github.com/cihanmehmet/2e383215ea83e08d01478446feac36d8#top-1000-tcp-ports-1)
 ```powershell

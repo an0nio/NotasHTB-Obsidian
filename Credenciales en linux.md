@@ -105,8 +105,23 @@ sudo cp /etc/shadow /tmp/shadow.bak
 unshadow /tmp/passwd.bak /tmp/shadow.bak > /tmp/unshadowed.hashes
 hashcat -m 1800 -a 0 /tmp/unshadowed.hashes rockyou.txt -o /tmp/unshadowed.cracked
 ```
-
+## /etc/sudoers
+- Explicación línea a línea del contenido de `/etc/sudoers`
+```bash
+<usuario> <maquinas> = (<usuarios_a_impersonar>) <comandos_permitidos>
+#Ejemplo de usuario que tiene acceso a todo pero sin contraseña para tcpdump
+joe ALL=(ALL) NOPASSWD: /usr/bin/tcpdump 
+joe ALL=(ALL) ALL
+```
+- Si tenemos permiso de escritura sobre este archivo podemos añadir la siguiente línea: 
+	```
+	myuser ALL=(ALL) NOPASSWD: ALL
+	```
 ## Credential hunting
+### Variables de entorno
+```bash
+env
+```
 ### Archivos de configuración
 #### Mostrar archivos de configuración
 ```bash
@@ -135,7 +150,15 @@ for l in $(echo ".py .pyc .pl .go .jar .c .sh");do echo -e "\nFile extension: " 
 ```
 ### Crontabs
 ```bash
+# Crontab global
+cat /etc/crontab
+# Scripts programados con /etc/cron
 ls -la /etc/cron.*/
+# Crontab de un usuario específico
+crontab -l -u <usuario>
+# Según permisos de escritura
+ls -la /var/spool/cron/crontabs/ 
+cat /var/spool/cron/crontabs/*
 ```
 ### Claves SSH
 #### Claves privadas
@@ -146,7 +169,7 @@ ls -la /etc/cron.*/
 ```bash
 grep -rnw "ssh-rsa" /home/* 2>/dev/null | grep ":1"
 ```
-### History
+### Historial y  archivos de configuración
 ```bash
 tail -n5 /home/*/.bash*
 ```

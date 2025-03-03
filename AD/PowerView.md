@@ -1,4 +1,4 @@
-#powerview
+import#powerview
 [chuleta interesante](https://elhacker.info/Cursos/Applied-Purple-Teaming/9-Others/Cheatsheets/PowerView.pdf)
 
 ## Uso 

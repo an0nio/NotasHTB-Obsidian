@@ -4,93 +4,53 @@
     "type": "split",
     "children": [
       {
-        "id": "0efefeac8a9fa294",
+        "id": "5daddd3dd10cb4bc",
         "type": "tabs",
         "children": [
           {
-            "id": "acfbb6111e3b2a69",
+            "id": "e9cb4fac681f0846",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "AD/Vulnerabilidades de vanguardia.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Vulnerabilidades de vanguardia"
-            }
-          },
-          {
-            "id": "c842d38ada753f3e",
-            "type": "leaf",
-            "state": {
-              "type": "image",
-              "state": {
-                "file": "imagenes/Pasted image 20250108091907.png"
-              },
-              "icon": "lucide-image",
-              "title": "Pasted image 20250108091907"
-            }
-          },
-          {
-            "id": "05fb7cbb0f671e58",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Servicios/SMB.md",
+                "file": "AD/Living off the land.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SMB"
+              "title": "Living off the land"
             }
           },
           {
-            "id": "12a4358b70d0a0c3",
+            "id": "4423ef57246f7578",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "AD/Abuso ACL.md",
+                "file": "Pivoting, tuneling, port forwarding.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Abuso ACL"
+              "title": "Pivoting, tuneling, port forwarding"
             }
           },
           {
-            "id": "6895e86ea7ffa866",
+            "id": "6e85f379a461b928",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "AD/Abuso ACL.md",
+                "file": "AD/PowerUp.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Abuso ACL"
-            }
-          },
-          {
-            "id": "d08b5c658392ea2b",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Credenciales en Windows.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Credenciales en Windows"
+              "title": "PowerUp"
             }
           }
         ],
-        "currentTab": 4
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -104,24 +64,12 @@
         "type": "tabs",
         "children": [
           {
-            "id": "e4dbaceeade87015",
-            "type": "leaf",
-            "state": {
-              "type": "file-explorer",
-              "state": {
-                "sortOrder": "alphabetical"
-              },
-              "icon": "lucide-folder-closed",
-              "title": "Files"
-            }
-          },
-          {
             "id": "24a3ee8ecd2062f3",
             "type": "leaf",
             "state": {
               "type": "search",
               "state": {
-                "query": "ntds.dit",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -143,18 +91,20 @@
             }
           },
           {
-            "id": "1c1e2227ca1fd725",
+            "id": "46ac93e8dfa2d057",
             "type": "leaf",
             "state": {
-              "type": "outline",
+              "type": "file-explorer",
               "state": {
-                "file": "AD/Ataques a AD.md"
+                "sortOrder": "alphabetical",
+                "autoReveal": false
               },
-              "icon": "lucide-list",
-              "title": "Outline of Ataques a AD"
+              "icon": "lucide-folder-closed",
+              "title": "Files"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
@@ -174,17 +124,17 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "AD/Ataques a AD.md",
-                "collapseAll": false,
-                "extraContext": false,
+                "file": "resoluciones/Password_Attack_Lab_-_Hard.md",
+                "collapseAll": true,
+                "extraContext": true,
                 "sortOrder": "alphabetical",
-                "showSearch": false,
+                "showSearch": true,
                 "searchQuery": "",
                 "backlinkCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Ataques a AD"
+              "title": "Backlinks for Password_Attack_Lab_-_Hard"
             }
           },
           {
@@ -202,6 +152,21 @@
             }
           },
           {
+            "id": "1c1e2227ca1fd725",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Pivoting, tuneling, port forwarding.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Pivoting, tuneling, port forwarding"
+            }
+          },
+          {
             "id": "e9aa9e933cd17d5d",
             "type": "leaf",
             "state": {
@@ -214,12 +179,12 @@
               "title": "Tags"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
-    "width": 308.5,
-    "collapsed": true
+    "width": 308.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -231,36 +196,38 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "e4dbaceeade87015",
+  "active": "4423ef57246f7578",
   "lastOpenFiles": [
-    "AD/Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL.md",
-    "AD/Abuso ACL.md",
-    "Credenciales en linux.md",
-    "Credenciales en Windows.md",
-    "AD/Útiles.md",
-    "AD/Vulnerabilidades de vanguardia.md",
-    "Domain Trust.md",
-    "Servicios/SMB.md",
-    "Untitled.md",
-    "imagenes/Pasted image 20250108091907.png",
+    "Atajos y demás.md",
     "Pivoting, tuneling, port forwarding.md",
-    "Pasted image 20250108092039.png",
-    "AD/Enumeración con acceso al dominio.md",
-    "Transferencia de archivos.md",
-    "AD/Herramientas de AD.md",
-    "AD/Ataques a AD.md",
-    "mim.md",
     "Servicios/SQL - MSSQL MySQL.md",
-    "AD/Kerberoasting.md",
-    "AD/Miscelaneo.md",
-    "AD/Enumeración de controles de seguridad.md",
-    "AD/Enumeración Inicial.md",
-    "AD/LLMNR NBT-NS Possoning.md",
-    "Fuerza bruta.md",
+    "Untitled.md",
+    "Credenciales en linux.md",
+    "Transferencia de archivos.md",
+    "Credenciales en Windows.md",
     "AD/Living off the land.md",
-    "AD/Password Spraying.md",
+    "AD/PowerUp.md",
     "AD/PowerView.md",
-    "Untitled 1.md",
+    "resoluciones/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_II.md",
+    "Servicios/SMB.md",
+    "AD/Útiles.md",
+    "AD/Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL.md",
+    "resoluciones/Attacking_common_Services_-_Easy.md",
+    "AD/Ataques a AD.md",
+    "AD/Herramientas de AD.md",
+    "XSS.md",
+    "AD/Enumeración con acceso al dominio.md",
+    "AD/Abuso ACL.md",
+    "resoluciones/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_I.md",
+    "AD/Enumeración Inicial.md",
+    "AD/Vulnerabilidades de vanguardia.md",
+    "Fuerza bruta.md",
+    "AD/LLMNR NBT-NS Possoning.md",
+    "Ffuf.md",
+    "Pasted image 20250108092039.png",
+    "imagenes/Pasted image 20250108091907.png",
+    "resoluciones/agrupaResoluciones.sh",
+    "resoluciones",
     "imagenes/Pasted image 20250107180258.png",
     "imagenes/Pasted image 20241202125901.png",
     "imagenes/Pasted image 20241119102616.png",
