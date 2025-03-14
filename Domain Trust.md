@@ -52,7 +52,7 @@ El ataque consiste en inyectar un SID de cuentas privilegiadas en el `sidHistory
     ```
 - **FQDN del dominio hijo**.
     ```powershell
-    mimikatz # lsadump::dcsync /user:LOGISTICS\\krbtgt
+    LOGISTICS.INLANEFREIGHT.LOCAL
     ```
 - **SID del grupo `Enterprise Admins` en el dominio raíz**.
     ```powershell

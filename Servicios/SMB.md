@@ -16,8 +16,14 @@ net view \\dc01 /all
 ```powershell
 dir \\192.168.220.129\share\
 ```
+##### Net View - Mostrar recurso compartido 
+```powershell
+net use \\192.168.167.72
+```
 ##### Net Use - Mapear recurso compartido `
 ```powershell
+# Si tenemos acceso a todo el contenido
+net use n: \\192.168.220.129\C$
 # Sin credenciales
 net use n: \\192.168.220.129\share
 # Con credenciales

@@ -161,6 +161,16 @@ Donde `<user_pass.list>` es una  combinación de usuario y contraseña separados
 	```bash
 	hydra -L users.txt -P passwords.txt 192.168.244.201 http-digest-auth 
 	```
+##### NTLM Auth
+- Puede ocurrir cuando nos encontremos con un servidor ISS. Si ya conocemos usuarios no hace falta hacer nada más, sino podemos enumerarlos con nmap: 
+	```bash
+	nmap -p 80 --script=http-ntlm-info $target
+	```
+- Fuerza bruta
+	```bash
+	hydra -l CORP\$username -P passwords.txt $target http-ntlm "/ruta_al_login"
+	```
+  
 ### Medusa
 Permite multitarget
 ```bash

@@ -35,7 +35,7 @@
 ### Habilitar RDP (Escritorio Remoto)
 - Habilitar RDP con `nxc`
 	```bash
-	nxc smb $IP -u administrator -p pass123 -M rdp -o ACTION=enable==
+	nxc smb $IP -u administrator -p pass123 -M rdp -o ACTION=enable
 	```
 - **Habilitar conexiones RDP:**
     ```powershell

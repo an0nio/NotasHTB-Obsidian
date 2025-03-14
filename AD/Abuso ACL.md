@@ -44,7 +44,6 @@ Supongamos que un usuario (`wley`) tiene un permiso `User-Force-Change-Password`
 - Creamos otro objeto tipo  `SecureString` para `damundsen` con las credenciales que queramos (`$passDam`)
 	```powershell
 	$passDam = ConvertTo-SecureString 'Pwn3d_by_ACLs!' -AsPlainText -Force
- 
 	```
 - Cambiamos la contraseña de usuario con `Set-DomainUsePassword` (no haría falta pasar credenciales si estuviéramos autenticados como `wley`)
 	```powershell

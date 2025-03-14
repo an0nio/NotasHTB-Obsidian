@@ -27,7 +27,7 @@
 - **enum4linux-ng (SMB - 445, 139):**
 	```bash
 	# Con credenciales
-	enum4linux-ng -P $target -u 'username' -p 'password!' -oA ilfreight
+	enum4linux-ng -P $target -u $username -p $password -oA ilfreight
 	# Null session
 	enum4linux-ng -P $target -oA ilfreight
 	```
@@ -94,7 +94,7 @@
 
 - **nxc (SMB):**
 	```bash
-	sudo nxc smb $target -u valid_users.txt -p Password123 | grep +
+	sudo nxc smb $target -u valid_users.txt -p Password123 --continue-on-success | grep +
 	```
 
 - **Local Admin Spraying:**
@@ -122,6 +122,13 @@
 	```
 
 ### Ejecutar Password Spraying
+- Spray-Passwords.ps1
+	```powershell
+	# Ejecuta password spraying contra todas las cuentas del dominio
+	.\Spray-Passwords.ps1 -Pass Nexus123!
+	# Ejecuta password spraying contra todas las cuentas con permisos administrativos
+	.\Spray-Passwords.ps1 -Pass Nexus123! -Admin
+	```
 - **DomainPasswordSpray (Windows AD):**
 	```powershell
 	Import-Module .\DomainPasswordSpray.ps1
