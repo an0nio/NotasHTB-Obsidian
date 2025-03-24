@@ -1,8 +1,9 @@
 :FFUEl término fuzzing se refiera a varios tipos de técnias utilizados para estudiar como se comporta una aplicación al aplicar distintos inputs distintos en ciertos campos. 
 - **Fuzzing básico de directorios:** 
 	```bash
-	 ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt:FUZZ -u http://$target:$port/FUZZ -o directoryFuzzing_$target
-# en offsec utilizan bastante: -w /usr/share/wordlists/dirb/common.txt
+	ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt:FUZZ -u http://$target:$port/FUZZ -e .html,.php -o directoryFuzzing_$target
+	# en offsec utilizan bastante: -w /usr/share/wordlists/dirb/common.txt
+	# más extensiones: ".txt,.htm,.html,.xhtml,.php,.asp,.aspx,.jsp,.do,.cgi,.pl,.py,.conf"
 	```
 - **Filtrado de resultados**
 	```bash

@@ -5,7 +5,7 @@
 - **`nxc` (SMB - 445):**
 	```bash
 	# Requiere credenciales
-	nxc smb $target -u 'username' -p 'password!' --pass-pol
+	nxc smb $target -u $username -p $password --pass-pol
 	```
 
 - **`rpcclient` (SMB - 445, 139):**
@@ -19,11 +19,11 @@
 	rpcclient $> getdompwinfo
 	```
 
-- **`enum4linux` (SMB - 445, 139):**
+- `enum4linux` (SMB - 445, 139):
 	```bash
 	enum4linux -P $target
 	```
-`-P` : password police
+	`-P` : password police
 - **enum4linux-ng (SMB - 445, 139):**
 	```bash
 	# Con credenciales
@@ -95,6 +95,7 @@
 - **nxc (SMB):**
 	```bash
 	sudo nxc smb $target -u valid_users.txt -p Password123 --continue-on-success | grep +
+	# Valorar añadir --local-auth
 	```
 
 - **Local Admin Spraying:**

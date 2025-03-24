@@ -95,3 +95,7 @@ Se podría utilizar `?` en lugar de `Where-Object` y `select` en lugar de `Selec
 	foreach($equipo in (Get-Content .\equipos.txt)) {Get-NetLocalGroupMember -computername $equipo -GroupName "Administrators"
 	}
 	```
+- Mostrar equipos y direcciones IP de cada uno de ellos para guardar en /etc/hosts
+	```powershell
+	foreach ($equipo in (Get-Content .\equipos.txt)) {$IP = Resolve-DnsName dc01 | select -ExpandProperty ipaddress; echo "$ip $equipo" }
+	```

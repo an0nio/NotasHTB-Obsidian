@@ -259,7 +259,7 @@ HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\FilterAdministrat
 ```
 
 ---
-##  Pass-the-Ticket (PtT)
+ ##  Pass-the-Ticket (PtT)
 Para este tipo de ataque se necesitan extraer tickets de tipo `TGT` ó `Service ticket`. En la práctica trabajaremos con `TGTs`, ya que son más valiosos y si podemos extraer un `Service ticket` es muy probable que podamos extraer también un `TGT`.
 ### Exportar Tickets
 En cualquiera de los casos necesitaremos permisos de administrador
@@ -325,7 +325,7 @@ Para un ataque **OverPass-the-Hash necesitamos
 - Cuando queremos extraer la clave `rc4_hmac` podemos hacerlo directamente de la SAM:
 	```powershell
 	.\mimikatz.exe privilege::debug sekurlsa::logonpasswords exit *> dumpLSASS.txt
-	También podríamos extraer esta clave (y además la AES256) con 
+	#También podríamos extraer esta clave (y además la AES256) con 
 	sekurlsa::ekeys
 	```
 

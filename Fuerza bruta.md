@@ -82,7 +82,7 @@ hashcat --force password.list -r custom.rule --stdout | sort -u > mut_password.l
 # Si solo queremos crear una regla, podemos utilarla junto con hashcat. Ej:
  hashcat -m 0 md5hash /usr/share/wordlists/rockyou.txt -r custom.rule
 ```
-Podemos encontrar reglas en `/usr/share/hashcat/rules`. Una de las más conocidas es `usrbest64.rule`. Otra regla interesante puede ser: `/usr/share/john/rule`
+Podemos encontrar reglas en `/usr/share/hashcat/rules`. Una de las más conocidas es `best64.rule`. Otra regla interesante puede ser: `/usr/share/john/rule`
 `s/rockyou-30000.rule`
 ## Servicios de red 
 ### nxc 

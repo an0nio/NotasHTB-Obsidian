@@ -45,13 +45,13 @@ Get-ChildItem \\192.168.220.129\Finance\
 Este mapeo solo persistirá en la sesión actual de powershell, el nombre del mapeo puede ser el que queramos
 ```powershell
 # Sin credenciales
-New-PSDrive -Name "SMB" -Root "\\192.168.220.129\Finance" -PSProvider "FileSystem"
+New-PSDrive -Name "SMB" -Root "\\192.168.220.129\share" -PSProvider "FileSystem"
 # Con credenciales
 $username = 'plaintext'
 $password = 'Password123'
 $secpassword = ConvertTo-SecureString $password -AsPlainText -Force
 $cred = New-Object System.Management.Automation.PSCredential $username, $secpassword
-New-PSDrive -Name "N" -Root "\\192.168.220.129\Finance" -PSProvider "FileSystem" -Credential $cred
+New-PSDrive -Name "N" -Root "\\192.168.220.129\share" -PSProvider "FileSystem" -Credential $cred
 # Una vez mapeado ya podremos acceder al recurso como queramos
 dir SMB:
 ```

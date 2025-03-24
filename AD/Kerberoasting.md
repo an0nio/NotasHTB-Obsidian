@@ -1,5 +1,5 @@
 #kerberoasting
-Técnica de escalada de privilegios y movimiento lateral. Se atacan cuentas asociadas a SPN solicitando tickets TGT, para posteriormente crackearlos con hashcat. Cualquier usuario autenticado en el AD puede solictar un ticket TGS.
+Técnica de escalada de privilegios y movimiento lateral. Se atacan cuentas asociadas a SPN solicitando tickets TGS, para posteriormente crackearlos con hashcat. Cualquier usuario autenticado en el AD puede solictar un ticket TGS.
 ## Linux
 Necesitamos tener credenciales de acceso (texto plano o NTML hash) y una shell en el contexto del usuario de dominio o `SYSTEM` shell. En los ejemplos suponemos que tenemos acceso al dominio con el usuario `forend`
 - Listar cuentas SPN - GetUserSPNs.py 

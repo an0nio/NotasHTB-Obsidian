@@ -61,3 +61,16 @@ sudo responder -I ens224
 El hash que se captura en el paso anterior es un hash NTMLv2 ( [Hashcat example hashes](https://hashcat.net/wiki/doku.php?id=example_hashes)) 
 ```bash
 hashcat -m 5600 forend_ntlmv2 /usr/share/wordlists/rockyou.txt
+```
+
+## Puertos comunes en una máquina Windows
+Estos puertos suelen estar abiertos en **cualquier sistema Windows**:
+
+| **Puerto**          | **Servicio**      | **Descripción**                            |
+| ------------------- | ----------------- | ------------------------------------------ |
+| **135**             | msrpc             | **RPC Endpoint Mapper** (COM/DCOM)         |
+| **139**             | netbios-ssn       | **NetBIOS** (SMB v1)                       |
+| **445**             | microsoft-ds      | **SMB** (archivos compartidos)             |
+| **3389**            | ms-wbt-server     | **RDP** (Escritorio Remoto)                |
+| **5985-5986,47001** | wsman             | **WinRM** (Administración remota por HTTP) |
+| **49664+**          | **Dynamic Ports** | **Puertos efímeros de Windows**            |
