@@ -113,10 +113,10 @@ Get-DomainUser -SPN
 Una posible solución es envíar nuevamente nuestras credenciales
 ```powershell
 $SecPassword = ConvertTo-SecureString '!qazXSW@' -AsPlainText -Force
-$Cred = New-Object System.Management.Automation.PSCredential('INLANEFREIGHT\\backupadm', $SecPassword)
+$Cred = New-Object System.Management.Automation.PSCredential('INLANEFREIGHT\backupadm', $SecPassword)
 ```
 
-Ahora, si intentamos ejecutar comandos que involucren servicios con autenticación delegada e incluimos la flag `-credenti-Credentialal $Cred` , podremos acceder a estos servicios:
+Ahora, si intentamos ejecutar comandos que involucren servicios con autenticación delegada e incluimos la flag `-credential $Cred` , podremos acceder a estos servicios:
 ```powershell
 get-domainuser -spn -credential $Cred | select samaccountname
 ```

@@ -15,6 +15,10 @@ mysql -h 127.0.0.1 -P 1234 -u root -p
 # mysql -h localhost -P 1234 -u root -p # -> Podría no funcionar
 ```
 Bajo la perspectiva de `$target` el tráfico parece provenir de `localhost`
+###### Configuración firefox para capturar el tráfico en burpsuite en localhost
+- Escribir en la barra: `about:config`
+- Cambiar a `true`: `network.proxy.allow_hijacking_localhost`
+- Capturar el tráfico de forma manual (no foxy proxy) en firefox
 ##### Conectar desde `$pwnbox` a `$target` a través de `$pivot`
 Tenemos aceso a `$pivot` y no tenemos acceso a `$target` desde nuestra pwnbox, pero sí desde `$pivot`.  Supongamos que queremos conectarnos vía  RDP  a `$target`
 - Hacemos que nuestra pwnbox esté en escucha en el puerto 33389 y redirija el tráfico al puerto 3389 de `$target`. Desde `$pwnbox`
@@ -431,6 +435,64 @@ socks5 127.0.0.1 1080
 | Windows 64-bit     | `wmic os get osarchitecture` | chisel_1.10.0_windows_amd64.gz |
 | Windows 32-bit     | `wmic os get osarchitecture` | chisel_1.10.0_windows_386.gz   |
 
+## Ligolo
+Permite utilizar TUN interfaces en lugar de los socks tradicionales (es lo que documentaremos aquí). Se documenta pivoting simple, aunque [aquí](https://arth0s.medium.com/ligolo-ng-pivoting-reverse-shells-and-file-transfers-6bfb54593fa5) se documentan mas casos
+### Pivoting Simple
+ - Creamos una interfaz TUN y la activamos (pwnbox)
+	```bash
+	sudo ip tuntap add user $(whoami) mode tun ligolo
+	sudo ip link set ligolo up
+	# Creada función de zsh
+	ligolo_up
+	```
+- Ejecución de proxy (pwnbox)
+	```bash
+	sudo ligolo-proxy -selfcert
+	```
+- Conexión desde la máquina cliente
+	```bash
+	./ligolo_agent.exe -connect 192.168.45.182:11601 -ignore-cert
+	```
+- Crear nueva ruta
+	```bash
+	sudo ip route add 172.16.5.0/24 dev ligolo
+	# Creada función zsh
+	ligolo_r 172.16.5.0/24
+	```
+- Iniciar el túnel (aplicación en pwnbox)
+	```bash
+	# Seleccionamos sesión
+	session
+	# Iniciamos túnel
+	start
+	```
+#### Para revshells y file transfers
+Lo documentado arriba solo sirve para dirigir el tráfico saliente en nuestra máquina, pero si necesitamos revshells o transferir archivos, debemos crear listeners
+- Redirección de puertos
+```bash
+# Ejemplo para revshell (nuestra pwnbox recibe en 4444)
+listener_add --addr 0.0.0.0:1234 --to 0.0.0.0:4444
+# Ejemplo para file transfer
+listener_add --addr 0.0.0.0:8000 --to 0.0.0.0:8000
+# Ejemplo para mysql
+listener_add --addr 0.0.0.0:33306 --to 127.0.0.1:3306
+```
+- No me ha funcionado, pero sí 
+	```powershell
+	listener_add --addr 0.0.0.0:4444 --to $vpnip:4444
+	listener_add --addr 0.0.0.0:8000 --to $vpnip:8000
+	```
+- Seguido de comando que apunte a $agent:1234 en la máquina víctima
+#### Eliminar rutas e interfaz
+
+- Eliminar una ruta creada 
+	```
+	sudo ip route del 172.16.5.0/24 dev ligolo
+	```
+- Eliminar la interfaz ligolo
+	```
+	sudo ip tuntap del mode tun dev ligolo
+	```
 
 ---
 ## Dato curioso

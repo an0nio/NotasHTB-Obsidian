@@ -580,6 +580,34 @@ xfreerdp /v:DC01
 
 ## Credential Hunting en Windows
 
+### Archivos de interés
+```powershell
+# GPG keys
+dir /s /b /a C:\users\*.gpg
+Get-ChildItem -Path C:\Users -Recurse -Filter *.gpg -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+
+# usually under C:\Users\*\AppData\Roaming\gnupg\
+
+# KeePass databases:
+dir *.kdb /a /b /s
+dir *.kdbx /a /b /s
+Get-ChildItem -Path C:\ -Include *.kdbx,*kdb -File -Recurse -Force -ErrorAction SilentlyContinue
+
+# XAMPP config files:
+powershell -c "Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue"
+# my.ini is MySQL config
+# passwords.txt has default creds
+
+# User files
+powershell -c "Get-ChildItem -Path C:\Users\ -Exclude Desktop.ini -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.ini,*pst,*.ost,*.eml,*.msg -File -Recurse -ErrorAction SilentlyContinue"
+
+# git
+Get-ChildItem -Path C:\ -Recurse -Directory -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq ".git" }
+
+# Diccionarios de chrome
+gc 'C:\Users\htb-student\AppData\Local\Google\Chrome\User Data\Default\Custom Dictionary.txt' | Select-String password
+```
+
 ### Buscar Credenciales en Archivos
 Findstr suele ser más rápido porque es nativo de Windows y está optimizado para
 ```powershell
@@ -588,13 +616,24 @@ findstr /s /i cred n:\*.*
 # con más de una palabra a buscar
 findstr /SIM /C:"password" /C:"cred" *.txt *.ini *.cfg *.config *.xml *.git *.ps1 *.yml
 # En todos los archivos
-findstr /S /I /M /C:"password" /C:"cred" C:\*.* # C:\*. para archivos sin extensión
+findstr /S /I /M /C:"password" /C:"cred" C:\*.* 
+# Cubriendo archvios sin extensión
+findstr /S /I /M /C:"password" /C:"cred" C:\*
 # powershell
-Get-ChildItem -Recurse -Path n:\ | Select-String "cred" -List
+Get-ChildItem -Recurse -Path n:\ -ErrorAction SilentlyContinue | Select-String "cred" -List
 # Buscando cualquier palabra que contenga cred o pass
-Get-ChildItem -Recurse -Path N:\ | Select-String -Pattern "cred|pass" -List
+Get-ChildItem -Recurse -Path N:\ -ErrorAction SilentlyContinue| Select-String -Pattern "cred|pass" -List
 ```
 ### Buscar archivos 
+- Buscar archigvos `unnatend.xml` (puede contener contraseñas hardcodeadas durante la instalación del sistema)
+	```powershell
+	# cmd
+	dir C:\unattend.xml /s /b
+	# powershell
+	Get-ChildItem -Path C:\ -Filter unattend.xml -Recurse -ErrorAction SilentlyContinue -Force
+	# con wildcards
+	Get-ChildItem -Path C:\ -Recurse -Include *unattend*.xml -ErrorAction SilentlyContinue
+	```
 - Buscar un archivo con un nombre completo
 	```powershell
 	# Powershell
@@ -619,10 +658,6 @@ Get-ChildItem -Recurse -Path N:\ | Select-String -Pattern "cred|pass" -List
 	```bash
 	Get-ChildItem -File -Recurse | Where-Object { $_.Length -gt 0 }
 	```
-- Buscar archivos keepass (`*.kdbx`), gestor de contraseñas
-	```powershell
-	Get-ChildItem -Path C:\ -Include *.kdbx -File -Recurse -ErrorAction SilentlyContinue
-	```
 - Opción propuesta por offsec para archivos con información sensible en una página web: 
 	```powershell
 	Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
@@ -637,25 +672,6 @@ Get-ChildItem -Recurse -Path N:\ | Select-String -Pattern "cred|pass" -List
 	# otro ejemplo con get-childitem
 	Get-ChildItem -Recurse -Filter "*config*" -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }  | ForEach-Object { "=== Información en: $_ ===`n" + (Select-String -Path $_ -Pattern "password|credential" -Context 5,5 | Out-String) + "`n--------------------------------------------------`n" }
 	```
-- Otros archivos interesantes (sacado de chuleta)
-```powershell
-# GPG keys
-dir /s /b /a C:\users\*.gpg
-# usually under C:\Users\*\AppData\Roaming\gnupg\
-
-# KeePass databases:
-dir *.kdb /a /b /s
-dir *.kdbx /a /b /s
-powershell -c "Get-ChildItem -Path C:\ -Include *.kdbx -File -Recurse -ErrorAction SilentlyContinue"
-
-# XAMPP config files:
-powershell -c "Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue"
-# my.ini is MySQL config
-# passwords.txt has default creds
-
-# User files
-powershell -c "Get-ChildItem -Path C:\Users\ -Exclude Desktop.ini -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.ini,*pst,*.ost,*.eml,*.msg -File -Recurse -ErrorAction SilentlyContinue"
-```
 ### Con `LaZagne`
 ```cmd
 C:\tools> lazagne.exe all
@@ -670,6 +686,10 @@ C:\tools> lazagne.exe all
 	# esto solo muestra dónde está guardado, después hay que abrir el archivo
 	(Get-PSReadlineOption).HistorySavePath
 	# puede ser interesante buscar sobre este archivo ConvertTo-SecureString, set-secret, keepass, -credential, authorization...
+	```
+- Mostrar el historial de todos los usuarios, si está en el path por defecto
+	```powershell
+	foreach($user in ((ls C:\users).fullname)){cat "$user\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt" -ErrorAction SilentlyContinue}
 	```
 - `Powershell transcription` es un es un mecanismo de auditoría que guarda todo lo que se ejecuta en PS en formato de texto.
 	```powershell

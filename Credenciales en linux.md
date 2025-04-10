@@ -127,10 +127,13 @@ env
 ```bash
 for l in $(echo ".conf .config .cnf");do echo -e "\nFile extension: " $l; find / -name *$l 2>/dev/null | grep -v "lib\|fonts\|share\|core" ;done
 ```
-
+### Buscar una palabra concreta en archivos del sistema
+```bash
+grep -r --exclude-dir=/proc --exclude-dir=/sys --exclude-dir=/dev "HTB{" / 2>/dev/null
+```
 #### Credenciales en archivos de configuración
 ```bash
-for i in $(find / -name *.cnf 2>/dev/null | grep -v "doc\|lib");do echo -e "\nFile: " $i; grep "user\|password\|pass\cred" $i 2>/dev/null | grep -v "\#";done
+for i in $(find / -name *.cnf 2>/dev/null | grep -v "doc\|lib");do echo -e "\nFile: " $i; grep "user\|password\|pass|\cred" $i 2>/dev/null | grep -v "\#";done
 ```
 ### Archivos con otras extensiones
 ```bash
@@ -178,7 +181,20 @@ Filtro interesante para aplicar a los logs
 ```bash
 for i in $(ls /var/log/* 2>/dev/null);do GREP=$(grep "accepted\|session opened\|session closed\|failure\|failed\|ssh\|password changed\|new user\|delete user\|sudo\|COMMAND\=\|logs" $i 2>/dev/null); if [[ $GREP ]];then echo -e "\n#### Log file: " $i; grep "accepted\|session opened\|session closed\|failure\|failed\|ssh\|password changed\|new user\|delete user\|sudo\|COMMAND\=\|logs" $i 2>/dev/null;fi;done
 ```
-
+### Archivos no vacíos
+Busca archivos dentro del directorio actual y subdirectorios que no estén vacíos.
+```bash
+find . -type f -size +0c
+```
+### Archivos con permisos de escritura
+```bash
+find / -type d -writable 2>/dev/null
+find / -type d -perm -u=w -user $(whoami) 2>/dev/null
+```
+Para local file inclusion puede ser interesante (porque es accesible a todos los usuarios y aplicaciones)
+```bash
+/dev/shm
+```
 ### Memoria
 #### Mimipenguin
 ```bash

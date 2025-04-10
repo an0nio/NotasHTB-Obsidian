@@ -50,19 +50,19 @@ mysql -u usuario -pContraseña -h $target
 ### MSSQL - Linux `sqsh`
 
 ```bash
-sqsh -S $target -U usuario -P 'Contraseña' 
+sqsh -S $target -U $username -P $password 
 ```
 Se puede añadir la flag `-h` para proporcionar una salida más limpia, sin encabezados ni pies de página
 
 ### MSSQL - Linux `Impacket mssqlclient`
 
 ```bash
-impacket-mssqlclient usuario@$target -p 1433
+impacket-mssqlclient $username@$target -p 1433
 ```
 #### Como usuario de AD
 Si nos autenticamos con un usuario Windows, podemos hacerlo con la flag `-windows-auth`
 ```bash
-mssqlclient.py usuario@$target -p 1433 -windows-auth
+impacket-mssqlclient $username@$target -p 1433 -windows-auth
 ```
 Puede ser útil obtener el hashNTMLv2 del usuario `mssqlsvc` y tras craquear la contraseña conectarnos nuevamente con este usuario  y `-windows-auth` 
 

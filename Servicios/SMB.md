@@ -20,7 +20,7 @@ dir \\192.168.220.129\share\
 ```powershell
 net use \\192.168.167.72
 ```
-##### Net Use - Mapear recurso compartido `
+##### Net Use - Mapear recurso compartido 
 ```powershell
 # Si tenemos acceso a todo el contenido
 net use n: \\192.168.220.129\C$
@@ -85,6 +85,8 @@ nxc smb $target --shares -u '' -p ''
 ```bash
 smbclient -N -L //$target
 smbclient -U=<username> -L //$target
+# En dominio 
+smbclient -U=<username> -W $domain -L //$target
 ```
 ##### smbmap
 ```bash
@@ -97,6 +99,8 @@ smbmap -H $target -r notes
 ##### sbmclient
 ```bash
 smbclient -U user \\\\$target\\SHARENAME
+# En dominio 
+smbclient -U <username> -W $domain -L //$target
 # Sin credenciales - smbclient es compatible con sintaxis Windows y Linux
 smbclient //$target/SHARENAME -N
 ```
@@ -111,13 +115,14 @@ smb: \> mput *.txt
 smb: \> get <archivo_remoto>
 ```
 ###### Descargar todo el contenido de una carpeta 
-```
-smb: \> mask ""
-smb: \> recurse ON
-smb: \> prompt OFF
-smb: \> cd path\to\remote\dir
-smb: \> lcd ../content/
-smb: \> mget *
+```bash
+# Dentro de la sesión de smb
+mask ""
+recurse ON
+prompt OFF
+cd path\to\remote\dir
+lcd ../content/
+mget *
 ```
 ##### smbmap
 ```bash

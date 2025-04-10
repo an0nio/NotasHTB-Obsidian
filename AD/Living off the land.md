@@ -23,7 +23,7 @@ Cuando no tenemos acceso a alguna de las herramientas de explotación
 
 - Mostrar variables de entorno de la sesión actual (CMD)
 	```powershell
-	set
+	Get-ChildItem Env:
 	```
 
 - Mostrar el nombre del dominio al que pertenece el equipo (CMD)

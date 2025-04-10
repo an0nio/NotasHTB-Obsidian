@@ -1,8 +1,9 @@
 :FFUEl término fuzzing se refiera a varios tipos de técnias utilizados para estudiar como se comporta una aplicación al aplicar distintos inputs distintos en ciertos campos. 
 - **Fuzzing básico de directorios:** 
 	```bash
-	ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt:FUZZ -u http://$target:$port/FUZZ -e .html,.php -o directoryFuzzing_$target
-	# en offsec utilizan bastante: -w /usr/share/wordlists/dirb/common.txt
+	ffuf -w /usr/share/wordlists/dirb/common.txt:FUZZ -u http://$target:$port/FUZZ -e .html,.php -o directoryFuzzing_$target_$port
+	# otro clásico (20K): 	/usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+	# Otro (5K): /usr/share/seclists/Discovery/Web-Content/common.txt
 	# más extensiones: ".txt,.htm,.html,.xhtml,.php,.asp,.aspx,.jsp,.do,.cgi,.pl,.py,.conf"
 	```
 - **Filtrado de resultados**
@@ -27,7 +28,7 @@
 		```
 - **Fuzzing recursivo**
 	```bash
-	ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-small.txt:FUZZ -u http://$target:$port/FUZZ -recursion -recursion-depth 1 -e .php -v -o recursiveFuzzing_$target
+	ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-small.txt:FUZZ -u http://$target:$port/FUZZ -recursion -recursion-depth 1 -e .php -v -o recursiveFuzzing_$target_$port
 	```
 	El parámetro `-e` en `ffuf` hace que el fuzzing se realice tanto sin la extensión como con la(s) extensión(es) especificada(s)
 - **Fuzzing de subdominios:**
@@ -40,7 +41,7 @@
 	```
 - **Fuzzing vhosts:** Podríamos pensar que es un fuzzing de subdominios en la misma IP. Puede que los vhosts no tengan registros DNS. La idea es hacer fuzzing al header del siguiente modo: 
 	```bash
-	ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ -u http://$domain:$port/ -H "Host: FUZZ.$domain" -o vhostsFuzzing_$target
+	ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ -u http://$domain:$port/ -H "Host: FUZZ.$domain" -o vhostsFuzzing_$domain
 	# Siempre recibiremos un código de respuesta 200, pero en este caso la idea es filtrar según el tamaño de la respuesta con -fs (filter size)
 	ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ -u http://$domain:$port/ -fs SIZE_RESPONSE -H "Host: FUZZ.$domain" -o vhostsFuzzing_$target
 	# IMPORTANTE: Recordar poner los hosts encontrados en /etc/hosts o no se podrán resolver

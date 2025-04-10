@@ -12,8 +12,7 @@ Una herramienta muy útil puede ser [CeWL](https://github.com/digininja/CeWL), q
 cewl https://www.inlanefreight.com -d 4 -m 6 -w inlane.wordlist
 # podríamos añadir la flag --lowercase, por ejemplo si lo queremos en minúsculas
 ```
-En este ejemplo `-d` indica la profundidad (depth) y `-m` indica el mínimo número de carácteres. Es útil combinar esto con algunas mutaciones 
-## John the Ripper
+En este ejemplo `-d` indica la profundidad (depth) y `-m` indica el mínimo número de carácteres. Es útil combinar esto con algunas mutaciones ## John the Ripper
 ### Ataque de diccionario
 ```bash
 john --wordlist=<wordlist_file> <hash_file>
@@ -84,6 +83,20 @@ hashcat --force password.list -r custom.rule --stdout | sort -u > mut_password.l
 ```
 Podemos encontrar reglas en `/usr/share/hashcat/rules`. Una de las más conocidas es `best64.rule`. Otra regla interesante puede ser: `/usr/share/john/rule`
 `s/rockyou-30000.rule`
+
+### Recuperación de contraseñas
+Añadir la flag `--show` después de haber corrido hashcat
+```
+hashcat -m 1000 onlyHashes /usr/share/wordlists/rockyou.txt --show
+```
+A veces puede devolver resultados como el que sigue: 
+```
+2e208ad146efda5bc44869025e06544a:$HEX[7261626269743a29]
+```
+Eso significa que tiene caracteres no imprimibles y debemos decodificarlo nosotros:
+```
+echo 7261626269743a29 | xxd -r -p
+```
 ## Servicios de red 
 ### nxc 
 ```bash
@@ -145,7 +158,7 @@ Donde `<user_pass.list>` es una  combinación de usuario y contraseña separados
 ##### Basic Auth
 - Tenemos en la cabecera el campo `Authorization` con el formato
 	```bash
-	Authorization: Basic base64(usuario:contraseña)
+	Authorization: Bficasic base64(usuario:contraseña)
 	```
 - Ataque con hydra:
 	```bash

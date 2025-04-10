@@ -1,10 +1,11 @@
+Si powerUp da algún tipo de error, podemos intentar herramientas como SharpUp, que nos permite bypasear PS con restricciones, es más sigiloso y ni siquiera requiere powershell
 ### **🛠️ Enumeración de vulnerabilidades**
 
 | **Comando**                       | **Descripción**                                                                                             |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `Invoke-AllChecks`                | Ejecuta **todas las pruebas** de PowerUp para detectar posibles escalaciones.                               |
 | `Get-ModifiablePath`              | Encuentra **directorios donde el usuario puede escribir** (potencial DLL hijacking o binario reemplazable). |
-| `Get-ModifiableFile`              | Lista **archivos modificables** por el usuario en rutas críticas.                                           |
+| `Get-ModifiableServiceFile`       | Lista **archivos modificables** por el usuario en rutas críticas.                                           |
 | `Get-ModifiableService`           | Busca **servicios vulnerables** a modificación de configuración.                                            |
 | `Get-ModifiableServiceFile`       | Encuentra archivos de servicio que el usuario puede modificar (**Binary Hijacking**).                       |
 | `Find-PathDLLHijack`              | Busca rutas vulnerables a **DLL Hijacking**.                                                                |
