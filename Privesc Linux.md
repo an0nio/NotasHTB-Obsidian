@@ -685,6 +685,12 @@ TODO: en [htb](https://academy.hackthebox.com/module/51/section/1640)
 	```bash
 	sudo -V | head -n1
 	```
+- Podemos comprobar si está parcheado del siguiente modo: 
+	```bash
+	sudoedit -s /
+	sudoedit: /: not a regular file # explotable
+	usage: sudoedit # no explotable
+	```
 - Si se cumple que es una verisión conocida podemos escalar del siguiente modo: 
 
 	```bash
