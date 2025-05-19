@@ -3,7 +3,7 @@
 
 | Base de Datos | Puertos Comunes                    |
 | - | - |
-| ssh -MSSQL    | TCP/1433, UDP/1434 (2433 "oculto") |
+| MSSQL         | TCP/1433, UDP/1434 (2433 "oculto") |
 | MySQL         | TCP/3306                           |
 ## Enumeración Inicial 
 ### MSSQL
@@ -57,7 +57,10 @@ Se puede añadir la flag `-h` para proporcionar una salida más limpia, sin enca
 ### MSSQL - Linux `Impacket mssqlclient`
 
 ```bash
+# Autenticación sin usuario de AD
 impacket-mssqlclient $username@$target -p 1433
+# Autenticación como usuario de AD
+impacket-mssqlclient $username:$password@$target -windows-auth
 ```
 #### Como usuario de AD
 Si nos autenticamos con un usuario Windows, podemos hacerlo con la flag `-windows-auth`

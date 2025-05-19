@@ -78,6 +78,15 @@ Enable-PSRemoting -Force
 ```powershell
 winrm quickconfig -force
 ```
+Solo los administradores podrán conectarse, si queremos que se pueda conectar cualquier usuario, hay que añadirlo al grupo `Remote Management Users`
+### Añadir a un usuario al grupo `Remote Management Users` -> permite acceso vía evilwinrm
+```
+# Powershell
+Add-LocalGroupMember -Group "Remote Management Users" -Member nombre_usuario
+# cmd
+net localgroup "Remote Management Users" nombre_usuario /add
+```
+
 ### Configurar autenticación sin contraseña (null sessions)
 - **Deshabilitar restricciones de null sessions:**
     ```powershell

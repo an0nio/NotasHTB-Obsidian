@@ -84,9 +84,9 @@ nxc smb $target --shares -u '' -p ''
 ##### smbclient
 ```bash
 smbclient -N -L //$target
-smbclient -U=<username> -L //$target
+smbclient -U=$username -L //$target
 # En dominio 
-smbclient -U=<username> -W $domain -L //$target
+smbclient -U=$username -W $domain -L //$target
 ```
 ##### smbmap
 ```bash
@@ -98,9 +98,9 @@ smbmap -H $target -r notes
 #### Acceder al contenido de los recursos
 ##### sbmclient
 ```bash
-smbclient -U user \\\\$target\\SHARENAME
+smbclient -U $username \\\\$target\\SHARENAME
 # En dominio 
-smbclient -U <username> -W $domain -L //$target
+smbclient -U $username -W $domain -L //$target
 # Sin credenciales - smbclient es compatible con sintaxis Windows y Linux
 smbclient //$target/SHARENAME -N
 ```

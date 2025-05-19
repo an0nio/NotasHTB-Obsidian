@@ -544,6 +544,19 @@ Falta: Revisar[apuntes htb]( https://academy.hackthebox.com/module/51/section/47
 | `arch` / `uname -m`   | Arquitectura del sistema (`x86_64`, `arm`, etc.)           |
 | `hostnamectl`         | (si disponible) Muestra OS, kernel y hardware en resumen   |
 | `lsb_release -a`      | (si está instalado) Otra forma de ver versión de la distro |
+#### Ejemplo
+- Linpeas nos da la salida de un posible exploit , CVE-2018-18955 subuid_shell
+- Googleando `subuid_shell github explot` encontramos lo [siguiente](https://github.com/scheatkode/CVE-2018-18955/blob/main/README.md)
+- Descargamos el último release en nuestra máquina 
+	```bash
+	 https://github.com/scheatkode/CVE-2018-18955/releases/download/v0.0.1/linux-x86_64.tar.gz
+	```
+- Lo subimos a la máquina víctima 
+- Descomprimimos (deben estar todos los archivos `.sh`)y ejecutamos 
+	```bash
+	./exploit.polkit.sh
+	```
+	que nos convierte en root automáticamente en root
 ### Bibliotecas compartidas
 #### Teoría
 - Las shared libraries son librerías que utilizan los binarios ya compiladas, y hay dos tipos: estáticas (`*.a`) que se incluyen dentro del binario a compilar y dinámicas (`*.so`), que se cargan en tiempo de ejecución (el binario solo las referencia)

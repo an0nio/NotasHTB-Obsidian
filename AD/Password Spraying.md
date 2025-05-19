@@ -21,7 +21,7 @@
 
 - `enum4linux` (SMB - 445, 139):
 	```bash
-	enum4linux -P $target
+	+
 	```
 	`-P` : password police
 - **enum4linux-ng (SMB - 445, 139):**

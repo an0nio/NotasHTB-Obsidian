@@ -12,7 +12,8 @@ Una herramienta muy útil puede ser [CeWL](https://github.com/digininja/CeWL), q
 cewl https://www.inlanefreight.com -d 4 -m 6 -w inlane.wordlist
 # podríamos añadir la flag --lowercase, por ejemplo si lo queremos en minúsculas
 ```
-En este ejemplo `-d` indica la profundidad (depth) y `-m` indica el mínimo número de carácteres. Es útil combinar esto con algunas mutaciones ## John the Ripper
+En este ejemplo `-d` indica la profundidad (depth) y `-m` indica el mínimo número de carácteres. Es útil combinar esto con algunas mutaciones 
+## John the Ripper
 ### Ataque de diccionario
 ```bash
 john --wordlist=<wordlist_file> <hash_file>

@@ -8,13 +8,27 @@
         "type": "tabs",
         "children": [
           {
-            "id": "928b06e4def32733",
+            "id": "9eed55da6cd2f268",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Servicios/SMB.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "SMB"
+            }
+          },
+          {
+            "id": "904283336a74d200",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
                 "file": "checklist oscp.md",
-                "mode": "source",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
@@ -22,62 +36,21 @@
             }
           },
           {
-            "id": "3fd455168a770dcf",
+            "id": "8e27225cf60038ce",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "resoluciones/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_II.md",
+                "file": "AD/Miscelaneo.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_II"
-            }
-          },
-          {
-            "id": "089eb7955cdccc02",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Fuerza bruta.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Fuerza bruta"
-            }
-          },
-          {
-            "id": "75764712334b90f2",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Ffuf.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Ffuf"
-            }
-          },
-          {
-            "id": "4423ef57246f7578",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Privesc Linux.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Privesc Linux"
+              "title": "Miscelaneo"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -96,7 +69,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "impacket-psex",
+                "query": "htacces",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -130,7 +103,8 @@
               "title": "Files"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
@@ -184,8 +158,8 @@
               "type": "outline",
               "state": {
                 "file": "checklist oscp.md",
-                "followCursor": false,
-                "showSearch": true,
+                "followCursor": true,
+                "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
@@ -210,7 +184,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 308.5
+    "width": 308.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -222,34 +197,34 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "928b06e4def32733",
+  "active": "18b5cccc8ce5b7ba",
   "lastOpenFiles": [
-    "resoluciones/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_II.md",
-    "Checklist.md",
+    "AD/PowerView.md",
     "checklist oscp.md",
-    "AD/Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL, WMI, DCOM.md",
-    "Privesc Windows.md",
-    "Privesc Linux.md",
-    "Fuerza bruta.md",
-    "Servicios/FTP.md",
-    "Servicios/DNS.md",
-    "Ffuf.md",
-    "Pivoting, tuneling, port forwarding.md",
     "Credenciales en linux.md",
-    "Transferencia de archivos.md",
-    "Atajos y demás.md",
-    "Credenciales en Windows.md",
-    "Escalada de privilegios Windows.md",
-    "Privesc Windows - htb cheatseet.md",
+    "Pivoting, tuneling, port forwarding.md",
+    "Servicios/SMB.md",
     "AD/Kerberoasting.md",
     "AD/Miscelaneo.md",
-    "Servicios/SQL - MSSQL MySQL.md",
-    "Servicios/SMB.md",
-    "resoluciones/Pivoting,_tunneling_and_port_forwarding_-_lab.md",
-    "AD/Útiles.md",
+    "AD/Enumeración sin acceso al dominio.md",
     "AD/Ataques a AD.md",
     "AD/Enumeración con acceso al dominio.md",
-    "resoluciones/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_I.md",
+    "AD/Abuso ACL.md",
+    "Credenciales en Windows.md",
+    "Servicios/RDP - 3389.md",
+    "Privesc Windows.md",
+    "().md",
+    "AD/Password Spraying.md",
+    "Servicios/SQL - MSSQL MySQL.md",
+    "resoluciones/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_II.md",
+    "AD/LLMNR NBT-NS Possoning.md",
+    "Checklist.md",
+    "AD/Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL, WMI, DCOM.md",
+    "AD/Útiles.md",
+    "Ffuf.md",
+    "Privesc Linux.md",
+    "AD/Herramientas de AD.md",
+    "Fuerza bruta.md",
     "Ejemplos",
     "Pasted image 20250108092039.png",
     "imagenes/Pasted image 20250108091907.png",

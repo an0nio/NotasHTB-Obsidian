@@ -402,12 +402,12 @@ Puede ser un poco más seguro para nosotros como atacantes escribir:
 ya que sólo expondría el puerto 8001 en localhost
 ##### Comportamiento `R:::` en otros escenarios
 
-|**Comando**|**Resultado**|
-|---|---|
-|`R:8080:127.0.0.1:80`|El atacante escucha en **8080** y reenvía tráfico al **puerto 80 en la víctima**.|
-|`R::8080:127.0.0.1:80`|**El atacante escucha en todas las interfaces (`0.0.0.0:8080`)** y reenvía a **80 en la víctima**.|
-|`R:::80`|**Igual que arriba, pero el puerto atacante también es 80**.|
-|`R::::3306`|**El atacante escucha en `3306` y reenvía a `127.0.0.1:3306` en la víctima**.|
+| **Comando**            | **Resultado**                                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------- |
+| `R:8080:127.0.0.1:80`  | El atacante escucha en **8080** y reenvía tráfico al **puerto 80 en la víctima**.                  |
+| `R::8080:127.0.0.1:80` | **El atacante escucha en todas las interfaces (`0.0.0.0:8080`)** y reenvía a **80 en la víctima**. |
+| `R:::80`               | **Igual que arriba, pero el puerto atacante también es 80**.                                       |
+| `R::::3306`            | **El atacante escucha en `3306` y reenvía a `127.0.0.1:3306` en la víctima**.                      |
 #### Redirección socks
 El siguiente comando hace que el servidor esté escuchando en el puerto `1080`
 ```bash
@@ -451,7 +451,7 @@ Permite utilizar TUN interfaces en lugar de los socks tradicionales (es lo que d
 	```
 - Conexión desde la máquina cliente
 	```bash
-	./ligolo_agent.exe -connect 192.168.45.182:11601 -ignore-cert
+	.\ligolo_agent.exe -connect 192.168.45.214:11601 -ignore-cert
 	```
 - Crear nueva ruta
 	```bash

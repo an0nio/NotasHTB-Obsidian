@@ -2,6 +2,7 @@
 - [[LLMNR NBT-NS Possoning]]
 - [[Password Spraying]]
 - [[Enumeración de controles de seguridad]]
+- [[Enumeración sin acceso al dominio]]
 - [[Enumeración con acceso al dominio]]
 - [[Living off the land]]
 - [[Kerberoasting]]
