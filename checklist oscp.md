@@ -56,7 +56,7 @@
 
 #### 💀 Null Sessions SMB
 ```bash
-smbclient -N -U "" -L \\$target
+smbclient -N -L \\$target
 ```
 #### 🚪 Puertos internos ocultos
 ```bash
@@ -167,6 +167,9 @@ ls -l /etc/passwd /etc/shadow /etc/sudoers
 
 # Sudo sin contraseña:
 sudo -l
+
+# Comprobaciones básicas
+id
 
 # credenciales por defecto
 su root
@@ -313,8 +316,8 @@ Detectables con herramientas como PowerUp, WinPEAS o manualmente:
 -  `Invoke-EventViewer`: Bypass UAC
 
 #### 🐞 Kernel exploits (TODO)
-- Identifica versión del sistema (`systeminfo`) y compara con exploits conocidos (e.g., MS16-032).
-- Usa `windows-exploit-suggester` para sugerencias automáticas.
+- Identifica rversión del sistema (`systeminfo`) y compara con exploits conocidos (e.g., MS16-032).
+- Usar `windows-exploit-suggester` para sugerencias automáticas.
 
 #### 🔥 Servicios vulnerables y tareas programadas
 - Servicios con ejecución como SYSTEM desde rutas editables.
@@ -322,6 +325,8 @@ Detectables con herramientas como PowerUp, WinPEAS o manualmente:
 #### 🪟 Archivos sospechosos
 
 ```powershell
+# Utilizar ... en lugar de dir, para mostrar ocultos y propietario del archivo
+dir /a /o /q 
 # Buscar archivos no vacíos
 Get-ChildItem -File -Recurse | Where-Object { $_.Length -gt 0 }
 

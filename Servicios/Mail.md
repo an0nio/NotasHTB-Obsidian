@@ -266,6 +266,9 @@ hydra -L users.txt -P passwords.txt imap://$target
 	- Servidor SMTP (puerto 25, 465 ó 587 abierto)
 - Montamos un servidor WebDAV en nuestra máquina pwnbox
 	```bash
+	python -m venv env
+	source  env/bin/activate
+	pip install wsgidav 
 	wsgidav --host=0.0.0.0 --port=80 --root=$(pwd) --auth=anonymous
 	```
 - Creamos una biblioteca en la máquina Windows tipo `.library-ms`: son archivos en formato XML, y proporcionan accesos virtuales que organizan archivos desde múltiples ubicaciones en una sola vista. Creamos un archivo llamado `config.library-ms`:

