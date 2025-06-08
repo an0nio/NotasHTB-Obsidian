@@ -13,58 +13,72 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "checklist oscp.md",
+                "file": "AD/Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL, WMI, DCOM.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "checklist oscp"
+              "title": "Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL, WMI, DCOM"
             }
           },
           {
-            "id": "0e77e4986240adfd",
+            "id": "1ef78872d4df2d26",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Privesc Linux.md",
+                "file": "Pivoting, tuneling, port forwarding.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Privesc Linux"
+              "title": "Pivoting, tuneling, port forwarding"
             }
           },
           {
-            "id": "f0a64ad774342c3b",
+            "id": "5974e5fd65d8e9d6",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Fuerza bruta.md",
+                "file": "AD/Abuso ACL.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Fuerza bruta"
+              "title": "Abuso ACL"
             }
           },
           {
-            "id": "2e1128a0a900a20c",
+            "id": "6f3699258fa935af",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "AD/Living off the land.md",
+                "file": "AD/Enumeración con acceso al dominio.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Living off the land"
+              "title": "Enumeración con acceso al dominio"
+            }
+          },
+          {
+            "id": "b2000762cf24bbd8",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Servicios/SQL - MSSQL MySQL.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "SQL - MSSQL MySQL"
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -83,7 +97,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "Set-DomainUserPassword",
+                "query": "snmpwalk",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -105,7 +119,7 @@
             }
           },
           {
-            "id": "18b5cccc8ce5b7ba",
+            "id": "d61368d8e800c199",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -171,13 +185,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "AD/Living off the land.md",
+                "file": "Pivoting, tuneling, port forwarding.md",
                 "followCursor": true,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Living off the land"
+              "title": "Outline of Pivoting, tuneling, port forwarding"
             }
           },
           {
@@ -212,34 +226,34 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "2e1128a0a900a20c",
+  "active": "1ef78872d4df2d26",
   "lastOpenFiles": [
+    "Credenciales en Windows.md",
+    "AD/Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL, WMI, DCOM.md",
+    "AD/Abuso ACL.md",
+    "AD/Ataques a AD.md",
+    "AD/Enumeración con acceso al dominio.md",
+    "Ffuf.md",
+    "Fuerza bruta.md",
+    "checklist oscp.md",
+    "Transferencia de archivos.md",
+    "resoluciones/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_II.md",
+    "Servicios/SQL - MSSQL MySQL.md",
+    "Servicios/RDP - 3389.md",
+    "Servicios/SMB.md",
+    "Credenciales en linux.md",
+    "XSS.md",
+    "AD/Living off the land.md",
     "AD/Kerberoasting.md",
     "AD/Enumeración sin acceso al dominio.md",
     "AD/Enumeración Inicial.md",
     "AD/Enumeración de controles de seguridad.md",
-    "AD/Enumeración con acceso al dominio.md",
-    "checklist oscp.md",
     "Checklist.md",
     "AD/Útiles.md",
-    "AD/Ataques a AD.md",
-    "AD/Abuso ACL.md",
     "Pivoting, tuneling, port forwarding.md",
-    "Fuerza bruta.md",
-    "Servicios/SQL - MSSQL MySQL.md",
-    "Credenciales en Windows.md",
     "Servicios/FTP.md",
     "Privesc Linux.md",
     "resoluciones/Attacking_common_Services_-_Easy.md",
-    "Credenciales en linux.md",
-    "Privesc Windows.md",
-    "Servicios/SMB.md",
-    "Ffuf.md",
-    "AD/Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL, WMI, DCOM.md",
-    "Servicios/RDP - 3389.md",
-    "AD/Vulnerabilidades de vanguardia.md",
-    "AD/Herramientas de AD.md",
-    "AD/Living off the land.md",
     "Ejemplos",
     "Pasted image 20250108092039.png",
     "imagenes/Pasted image 20250108091907.png",
