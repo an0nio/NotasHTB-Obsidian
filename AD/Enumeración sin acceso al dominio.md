@@ -40,17 +40,6 @@ crackmapexec smb $target --shares --users --pass-pol
 
   
 
-- `rpcclient`
-
-```bash
-
-rpcclient -U "" $target
-
-> enumdomusers
-
-```
-
-  
 
 - `nmblookup`
 

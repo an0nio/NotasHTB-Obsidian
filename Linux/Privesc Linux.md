@@ -64,7 +64,7 @@ Por si todo falla: https://github.com/m0nad/awesome-privilege-escalation?tab=rea
 	```bash
 	cat /etc/fstab
 	```
-	Más información [[Ejemplo explotación de montajes peligrosos| aquí]]
+	Más información [[Escalada en montajes peligrosos| aquí]]
 - Sistemas de archivos montados en el sistema
 	```
 	df -h

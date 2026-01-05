@@ -4,81 +4,81 @@
     "type": "split",
     "children": [
       {
-        "id": "5daddd3dd10cb4bc",
+        "id": "eeebcf02ffb6bf70",
         "type": "tabs",
         "children": [
           {
-            "id": "8e27225cf60038ce",
+            "id": "106fd517045d2c2c",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "AD/Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL, WMI, DCOM.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL, WMI, DCOM"
-            }
-          },
-          {
-            "id": "1ef78872d4df2d26",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Pivoting, tuneling, port forwarding.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Pivoting, tuneling, port forwarding"
-            }
-          },
-          {
-            "id": "5974e5fd65d8e9d6",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "AD/Abuso ACL.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Abuso ACL"
-            }
-          },
-          {
-            "id": "6f3699258fa935af",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "AD/Enumeración con acceso al dominio.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Enumeración con acceso al dominio"
-            }
-          },
-          {
-            "id": "b2000762cf24bbd8",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Servicios/SQL - MSSQL MySQL.md",
+                "file": "AD/Enumeración Inicial.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SQL - MSSQL MySQL"
+              "title": "Enumeración Inicial"
+            }
+          },
+          {
+            "id": "c12c3c6b3a7dd50f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "AD/Enumeración sin acceso al dominio.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Enumeración sin acceso al dominio"
+            }
+          },
+          {
+            "id": "bfac0c18a1bc5391",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Ffuf.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Ffuf"
+            }
+          },
+          {
+            "id": "170f956aad56b47c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "AD/Password Spraying.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Password Spraying"
+            }
+          },
+          {
+            "id": "204abf8ace8e5628",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "CWES/Web request.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Web request"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -97,7 +97,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "snmpwalk",
+                "query": "\"-windows-auth\"",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -185,13 +185,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Pivoting, tuneling, port forwarding.md",
+                "file": "CWES/Web request.md",
                 "followCursor": true,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Pivoting, tuneling, port forwarding"
+              "title": "Outline of Web request"
             }
           },
           {
@@ -218,6 +218,7 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "bases:Create new base": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
@@ -226,50 +227,53 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "1ef78872d4df2d26",
+  "active": "204abf8ace8e5628",
   "lastOpenFiles": [
-    "Credenciales en Windows.md",
-    "AD/Movimiento lateral y acceso privilegiado - RDP, WinRM, MSSQL, WMI, DCOM.md",
-    "AD/Abuso ACL.md",
-    "AD/Ataques a AD.md",
-    "AD/Enumeración con acceso al dominio.md",
+    "CWES/imagenes/Pasted image 20260104200047.png",
+    "CWES/Web request.md",
+    "Untitled.md",
+    "Windows/Credenciales en Windows.md",
+    "Pasted image 20260104200126.png",
+    "CWES/imagenes",
+    "CWES/Untitled.md",
+    "XSS.md",
+    "CWES",
+    "Transferencia de archivos.md",
+    "Pivoting, tuneling, port forwarding.md",
     "Ffuf.md",
     "Fuerza bruta.md",
     "checklist oscp.md",
-    "Transferencia de archivos.md",
-    "resoluciones/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_II.md",
-    "Servicios/SQL - MSSQL MySQL.md",
-    "Servicios/RDP - 3389.md",
-    "Servicios/SMB.md",
-    "Credenciales en linux.md",
-    "XSS.md",
-    "AD/Living off the land.md",
-    "AD/Kerberoasting.md",
-    "AD/Enumeración sin acceso al dominio.md",
-    "AD/Enumeración Inicial.md",
-    "AD/Enumeración de controles de seguridad.md",
+    "Linux/Escalada en montajes peligrosos.md",
     "Checklist.md",
-    "AD/Útiles.md",
-    "Pivoting, tuneling, port forwarding.md",
-    "Servicios/FTP.md",
-    "Privesc Linux.md",
-    "resoluciones/Attacking_common_Services_-_Easy.md",
+    "Atajos y demás.md",
+    "Windows/Privesc Windows - htb cheatseet.md",
+    "Linux",
+    "Windows/Privesc Windows.md",
+    "Windows",
+    "AD/Abuso ACL.md",
+    "Masterclass - 2 Octubre.md",
+    "imagenes/Pasted image 20250108092039.png",
+    "AD/Domain Trust.md",
+    "resoluciones/htb/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_I.md",
+    "resoluciones/oscp",
+    "resoluciones/htb/AD_Enumeration_&_Attacks_-_Skills_Assessment_Part_II.md",
+    "resoluciones/htb/Common_services_-_mail.md",
+    "resoluciones/htb",
+    "resoluciones/htb/Common_Services_-_SMB.md",
+    "resoluciones/htb/Credentials_-_SQL.md",
+    "resoluciones/htb/Resolution_lab1_-_Credentials_HTB_Academy.md",
+    "resoluciones/htb/Resolution_lab2_-_Credentials_HTB_`Academy`.md",
+    "imagenes/Pasted image 20241119102616.png",
     "Ejemplos",
-    "Pasted image 20250108092039.png",
     "imagenes/Pasted image 20250108091907.png",
     "imagenes/Pasted image 20250107180258.png",
     "imagenes/Pasted image 20241202125901.png",
-    "imagenes/Pasted image 20241119102616.png",
     "resoluciones/agrupaResoluciones.sh",
     "resoluciones",
     "imagenes",
     "imágenes/Pasted image 20250107180258.png",
     "imágenes/Pasted image 20241202125901.png",
     "imágenes/Pasted image 20241119102616.png",
-    "imágenes",
-    "AD",
-    "PowerView",
-    "Servicios",
     "Untitled.canvas",
     "Untitled 2.canvas",
     "Untitled 1.canvas"

