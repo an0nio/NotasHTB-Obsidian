@@ -120,7 +120,7 @@ nxc smb $target -u Administrator -H $(cat hashAdmin_gyoza) --lsa --local-auth
 - Cada vez que encontremos un nuevo usuario repetir procesos de enumeración, como mostrar el historial del usuario, carpetas en las que pueda haber información sensible sobre otros usuarios, volver a lanzar winpeas...
 ---
 
-### 🌐 Pentesting Web - TODO
+### 🌐 Pentesting Web 
 #### 🔍 Reconocimiento
 - `whatweb`, Wappalyzer
 - Buscar info en:
