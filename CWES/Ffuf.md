@@ -1,4 +1,4 @@
-:FFUEl término fuzzing se refiera a varios tipos de técnias utilizados para estudiar como se comporta una aplicación al aplicar distintos inputs distintos en ciertos campos. 
+El término fuzzing se refiera a varios tipos de técnias utilizados para estudiar como se comporta una aplicación al aplicar distintos inputs distintos en ciertos campos. 
 ## Fuzzing de directorios
 Podemos realizar fuzzing de directorios del siguiente modo
 
@@ -78,6 +78,8 @@ awk -v ip="$target" '{print ip, $1}' vhosts_$target | sudo tee -a /etc/hosts
 Proxy:** Podríamos hacer pasar por un proxy como burpsuite añadiendo la flag `-x http://127.0.0.1:8080`. Ejemplo con petición de descubrimiento de vhosts: 
 ```bash
 ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ -u http://$domain:$port/ -H "Host: FUZZ.$domain" -o vhostsFuzzing_$target -x http://127.0.0.1:8080
+# Podemos utilizar la sigueinte opción para que solo pasen por burp las expresiones matcheadas
+... -replay-proxy http://127.0.0.1:8080 
 ```
 ## Fuzzing de parámetros GET/POST
 ### GET
