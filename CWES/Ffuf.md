@@ -55,7 +55,6 @@ Uno de los diccionarios más comunes es el siguiente:
 ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ -u http://FUZZ.$domain/ -o subdomainFuzzing_$target 
 ```
 Los diccionarios clásicos los podemos encontrar en `/usr/share/seclists/Discovery/DNS/`, como por ejemplo: 
-`/usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt`
 
 ## Fuzzing de vhosts
 
